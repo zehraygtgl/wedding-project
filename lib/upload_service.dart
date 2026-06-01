@@ -1,10 +1,10 @@
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:cloud_functions/cloud_functions.dart';
 import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 class UploadService {
   final FirebaseStorage _storage = FirebaseStorage.instance;
-  final FirebaseFunctions _functions = FirebaseFunctions.instance;
 
   Future<void> pickAndUploadAni({
     required Function(double progress) onProgress,
@@ -40,18 +40,25 @@ class UploadService {
       // Yüklemenin Firebase Storage tamponuna tamamen bitmesini bekliyoruz
       await uploadTask;
 
-      // 4. Tampon doldu! Şimdi arka planda az önce yazdığımız Drive tetikleyici fonksiyonunu çağırıyoruz
-      final HttpsCallable callable = _functions.httpsCallable('shareAnilar');
-      final response = await callable.call({
-        'storagePath': storagePath,
-        'filename': file.name,
-        'mimeType': file.mimeType,
-      });
+      // 4. Standart HTTP POST isteğiyle Cloud Function'ı tetikliyoruz
+      final url = Uri.parse(
+        'https://us-central1-wedding-1c8cc.cloudfunctions.net/shareAnilar',
+      );
 
-      if (response.data['status'] == 'success') {
+      final response = await http.post(
+        url,
+        headers: {'Content-Type': 'application/json'},
+        body: jsonEncode({
+          'storagePath': storagePath,
+          'filename': file.name,
+          'mimeType': file.mimeType ?? 'image/jpeg',
+        }),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 204) {
         onSuccess("Harika! Anın başarıyla yüklendi. 🤍");
       } else {
-        onError("Sunucu kopyalama hatası: ${response.data['message']}");
+        onError("Sunucu kopyalama hatası: Kod ${response.statusCode}");
       }
     } catch (e) {
       onError("Yükleme işlemi başarısız: $e");
