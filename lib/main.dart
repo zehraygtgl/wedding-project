@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'dart:ui';
 import 'dart:convert';
 import 'dart:html' as html;
 import 'package:http/http.dart' as http;
+import 'package:google_fonts/google_fonts.dart'; // Font garantisi için paketimiz
 
 void main() {
   runApp(const MyApp());
@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: const Color(0xFFB76E79), // Gül kurusu temeli
+        colorSchemeSeed: const Color(0xFFB59975),
       ),
       home: const WeddingUploadPage(),
     );
@@ -37,11 +37,10 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
   int _totalFiles = 0;
   int _currentFileIndex = 0;
 
-  // Cıvıl Cıvıl Yaz Düğünü Renk Paleti
-  final Color gulKurusu = const Color(0xFFB76E79);
-  final Color yaprakYesili = const Color(0xFF6B8E23); // Canlı kır yesili
-  final Color yazGunesi = const Color(0xFFFAA462); // Sıcak neşeli turuncu/sarı
-  final Color derinSiyah = const Color(0xFF333333);
+  final Color kartBeyazi = const Color(0xFFFDFDFD);
+  final Color vizonAltin = const Color(0xFFB59975);
+  final Color koyuYazi = const Color(0xFF2C2C2C);
+  final Color softYazi = const Color(0xFF666666);
 
   void _startNativeWebUpload() {
     final html.FileUploadInputElement uploadInput =
@@ -105,7 +104,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: const Text("Tüm anılarınız başarıyla yüklendi. 🤍"),
-              backgroundColor: gulKurusu,
+              backgroundColor: vizonAltin,
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -132,202 +131,184 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
     return Scaffold(
       body: Stack(
         children: [
-          // 1. Yeni Arka Plan: Capcanlı, gün ışığıyla yıkanan, çiçekli neşeli bir yaz kır düğünü konsepti
+          // 💡 LOKAL ARKA PLAN: Artık internet hızı ya da engeller yüzünden asla patlamaz!
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: NetworkImage(
-                  'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?q=80&w=1600',
-                ),
+                image: AssetImage('assets/arka_plan.jpg'),
                 fit: BoxFit.cover,
               ),
             ),
           ),
-          // Görselin renklerini söndürmeyen, sadece yaz aylarının o soft sıcaklığını veren çok hafif bir filtre
-          Container(color: Colors.white.withOpacity(0.15)),
+          Container(
+            color: Colors.black.withOpacity(0.3), // Premium sinematik gölgeleme
+          ),
 
-          // 2. Cıvıl Cıvıl Parlayan Kristal Kart
           Center(
             child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(24),
-                child: BackdropFilter(
-                  filter: ImageFilter.blur(
-                    sigmaX: 10,
-                    sigmaY: 10,
-                  ), // Kristal cam parlaklığı
-                  child: Container(
-                    constraints: const BoxConstraints(maxWidth: 400),
-                    decoration: BoxDecoration(
-                      // 💡 KART BEMBEYAZ PARILTIYA DÖNDÜ: İç açıcı yaz enerjisi
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [
-                          Colors.white.withOpacity(0.85),
-                          Colors.white.withOpacity(0.65),
-                        ],
-                      ),
-                      borderRadius: BorderRadius.circular(24),
-                      border: Border.all(
-                        width: 1.5,
-                        color: gulKurusu.withOpacity(
-                          0.5,
-                        ), // Çerçeveniz neşeli gül kurusu
-                      ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: yaprakYesili.withOpacity(0.15),
-                          blurRadius: 25,
-                          offset: const Offset(0, 10),
-                        ),
-                      ],
+              padding: const EdgeInsets.all(16.0),
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 390),
+                decoration: BoxDecoration(
+                  color: kartBeyazi.withOpacity(0.96),
+                  borderRadius: BorderRadius.circular(32),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.18),
+                      blurRadius: 25,
+                      offset: const Offset(0, 10),
                     ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 28.0,
-                      vertical: 48.0,
+                  ],
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32.0,
+                  vertical: 44.0,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // İsimler (Premium Davetiye Yazı Tipi)
+                    Text(
+                      "Hilal & Oğuz",
+                      style: GoogleFonts.cinzel(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w600,
+                        color: koyuYazi,
+                        letterSpacing: 0.5,
+                      ),
+                      textAlign: TextAlign.center,
                     ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Sevimli Kırmızı Kalp
-                        const Text("❤️", style: TextStyle(fontSize: 28)),
-                        const SizedBox(height: 16),
+                    const SizedBox(height: 4),
+                    Text(
+                      "2026",
+                      style: GoogleFonts.montserrat(
+                        fontSize: 12,
+                        color: softYazi,
+                        letterSpacing: 3,
+                      ),
+                    ),
+                    const SizedBox(height: 32),
 
-                        // İsimler (Gül Kurusu asaletinde ve kocaman)
-                        Text(
-                          "Hilal & Oğuz",
-                          style: TextStyle(
-                            fontSize: 34,
-                            fontWeight: FontWeight.bold,
-                            color: gulKurusu,
-                            letterSpacing: 1,
-                          ),
-                          textAlign: TextAlign.center,
+                    // Eğik Şiirsel Söz (Asil serif el yazısı modu)
+                    Text(
+                      "\"Anılar, kalbin\nen güzel hazinesidir.\"",
+                      style: GoogleFonts.playfairDisplay(
+                        fontSize: 20,
+                        fontStyle: FontStyle.italic,
+                        color: koyuYazi,
+                        height: 1.4,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Alt Açıklama
+                    Text(
+                      "Fotoğraf ve videolarınızı bizimle paylaşır mısınız?",
+                      style: GoogleFonts.montserrat(
+                        fontSize: 12,
+                        color: softYazi,
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: 0.1,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 36),
+
+                    // Sabit Metin Alanı
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(vertical: 15),
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        borderRadius: BorderRadius.circular(25),
+                        border: Border.all(color: Colors.black12, width: 0.8),
+                      ),
+                      child: Text(
+                        "ADINIZ (İSTEĞE BAĞLI)",
+                        textAlign: TextAlign.center,
+                        style: GoogleFonts.montserrat(
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          color: softYazi.withOpacity(0.6),
+                          letterSpacing: 1.5,
                         ),
-                        const SizedBox(height: 6),
-                        // Alt Başlık (Canlı Yaprak Yeşili Tonu)
-                        Text(
-                          "B İ R  Ö M Ü R  B O Y U  M U T L U L U Ğ A . . . ✨",
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: yaprakYesili,
-                            letterSpacing: 2,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
 
-                        const SizedBox(height: 24),
-
-                        // Zarif Renkli Ayraç
-                        Container(
-                          width: 80,
-                          height: 1.5,
-                          color: gulKurusu.withOpacity(0.3),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Senin İstediğin O Kısa, Net Soru Cümlesi (Derin siyahla çok net okunuyor)
-                        Text(
-                          "Bu güzel gecede çektiğiniz fotoğrafları ve videoları bizimle paylaşır mısınız? 🤍",
-                          style: TextStyle(
-                            fontSize: 14.5,
-                            color:
-                                derinSiyah, // Beyaz kartın üzerinde cam gibi net okunuyor
-                            height: 1.5,
-                            fontWeight: FontWeight.w500,
-                          ),
-                          textAlign: TextAlign.center,
-                        ),
-
-                        const SizedBox(height: 36),
-
-                        // 3. Durum / Buton Kontrolü
-                        if (_isUploading) ...[
-                          Column(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(10),
-                                child: LinearProgressIndicator(
-                                  value: _currentFileIndex / _totalFiles,
-                                  minHeight: 6,
-                                  backgroundColor: gulKurusu.withOpacity(0.1),
-                                  valueColor: AlwaysStoppedAnimation<Color>(
-                                    gulKurusu,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                "Anılar aktarılıyor... ✨",
-                                style: TextStyle(
-                                  color: gulKurusu,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 13,
-                                ),
-                              ),
-                              Text(
-                                "$_currentFileIndex / $_totalFiles dosya yüklendi",
-                                style: TextStyle(
-                                  color: derinSiyah.withOpacity(0.6),
-                                  fontSize: 11,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ] else ...[
-                          // Neşeli, Cıvıl Cıvıl Yaz Butonu
-                          Container(
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(30),
-                              gradient: LinearGradient(
-                                colors: [
-                                  gulKurusu,
-                                  yazGunesi,
-                                ], // Enerjik, güneşli geçiş
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: gulKurusu.withOpacity(0.3),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
-                            ),
-                            child: ElevatedButton.icon(
-                              onPressed: _startNativeWebUpload,
-                              icon: const Icon(
-                                Icons.auto_awesome_rounded,
-                                size: 18,
-                              ),
-                              label: const Text(
-                                "Anıları Seç ve Gönder",
-                                style: TextStyle(
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.3,
-                                ),
-                              ),
-                              style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors.transparent,
-                                foregroundColor: Colors.white,
-                                shadowColor: Colors.transparent,
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 32,
-                                  vertical: 16,
-                                ),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(30),
-                                ),
+                    // Canlı Sayaç ve Yükleme Buton Kontrolü
+                    if (_isUploading) ...[
+                      Column(
+                        children: [
+                          const SizedBox(height: 8),
+                          ClipRRect(
+                            borderRadius: BorderRadius.circular(10),
+                            child: LinearProgressIndicator(
+                              value: _currentFileIndex / _totalFiles,
+                              minHeight: 6,
+                              backgroundColor: vizonAltin.withOpacity(0.15),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                vizonAltin,
                               ),
                             ),
                           ),
+                          const SizedBox(height: 14),
+                          Text(
+                            "Anılarınız aktarılıyor... ✨",
+                            style: GoogleFonts.montserrat(
+                              color: vizonAltin,
+                              fontWeight: FontWeight.bold,
+                              fontSize: 13,
+                            ),
+                          ),
+                          Text(
+                            "$_currentFileIndex / $_totalFiles dosya yüklendi",
+                            style: GoogleFonts.montserrat(
+                              color: koyuYazi.withOpacity(0.6),
+                              fontSize: 11,
+                            ),
+                          ),
                         ],
-                      ],
+                      ),
+                    ] else ...[
+                      // Muhteşem Modern Buton
+                      SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: _startNativeWebUpload,
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: vizonAltin,
+                            foregroundColor: Colors.white,
+                            elevation: 0,
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(25),
+                            ),
+                          ),
+                          child: Text(
+                            "ANILARI PAYLAŞ",
+                            style: GoogleFonts.montserrat(
+                              fontSize: 13,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 2,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+
+                    // Dipnot
+                    Text(
+                      "* Birden fazla seçim yapabilirsiniz.",
+                      style: GoogleFonts.playfairDisplay(
+                        fontSize: 11,
+                        fontStyle: FontStyle.italic,
+                        color: softYazi.withOpacity(0.7),
+                      ),
                     ),
-                  ),
+                  ],
                 ),
               ),
             ),
