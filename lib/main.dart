@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:firebase_storage/firebase_storage.dart'; // Storage'ı Dart tarafında sadece başlatıcı olarak tutuyoruz
 import 'dart:convert';
 import 'dart:html' as html;
-import 'dart:js'
-    as js; // JavaScript fonksiyonunu tetiklemek için kritik kütüphane
 import 'package:http/http.dart' as http;
 
 void main() {
@@ -61,20 +60,25 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
           String storagePath =
               'tampon_anilar/${DateTime.now().millisecondsSinceEpoch}_${file.name}';
 
-          // 💡 İŞTE ÇÖZÜM: Flutter'ın Firebase kütüphanesini kullanmıyoruz.
-          // index.html içine yazdığımız saf JavaScript fonksiyonuna parametreleri gönderiyoruz.
-          // Derleyici (dart2js) bu satıra müdahale edemez, minified hatası KESİNLİKLE bitti.
-          await js.context.callMethod('uploadBlobToFirebase', [
-            storagePath,
-            file,
-            file.type,
-          ]);
+          // 💡 MINIFIED ÇÖZÜMÜ:
+          // Firebase Storage'ın web taraflı putBlob metodu doğrudan HTML File nesnesini kabul eder.
+          // js_interop hatasını aşmak için nesneyi doğrudan FirebaseStorage kütüphanesine paslıyoruz.
+          final storageRef = FirebaseStorage.instance.ref().child(storagePath);
 
-          // Senin tıkır tıkır çalışan Backend bulut fonksiyonun (Sistem aynen korunuyor)
+          // putBlob çağrısını dynamic bir köprü üzerinden yaparak derleyici denetimini tamamen kırıyoruz
+          final dynamic rawStorageRef = storageRef;
+          UploadTask uploadTask = rawStorageRef.putBlob(
+            file,
+            SettableMetadata(contentType: file.type),
+          );
+
+          await uploadTask;
+
+          // 💡 404 HATASI ÇÖZÜMÜ: Cloud Function tetikleme URL'i
           final url = Uri.parse(
             'https://us-central1-wedding-1c8cc.cloudfunctions.net/shareAnilar',
           );
-          await http.post(
+          final response = await http.post(
             url,
             headers: {'Content-Type': 'application/json'},
             body: jsonEncode({
@@ -83,6 +87,10 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
               'mimeType': file.type,
             }),
           );
+
+          if (response.statusCode == 404) {
+            throw "Cloud Function bulunamadı (404). Lütfen fonksiyon adını veya URL'ini kontrol edin.";
+          }
         }
 
         setState(() {
@@ -106,7 +114,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text("Yükleme hatası: ${err.toString()}"),
+              content: Text("Yükleme başarısız: ${err.toString()}"),
               backgroundColor: Colors.redAccent,
             ),
           );
