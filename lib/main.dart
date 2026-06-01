@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
-import 'upload_service.dart';
+import 'package:firebase_storage/firebase_storage.dart';
+import 'package:image_picker/image_picker.dart';
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 
 void main() {
   runApp(const MyApp());
@@ -15,7 +18,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: const Color(0xFFB76E79), // Gül kurusu tabanlı tema
+        colorSchemeSeed: const Color(0xFFB76E79),
       ),
       home: const WeddingUploadPage(),
     );
@@ -30,53 +33,98 @@ class WeddingUploadPage extends StatefulWidget {
 }
 
 class _WeddingUploadPageState extends State<WeddingUploadPage> {
-  // Sıkıştırma hatasını önlemek için metotları statik veya doğrudan fonksiyon içinde çağırıyoruz
   bool _isUploading = false;
   double _progress = 0.0;
 
+  // Bohem kır düğünü renk paletimiz
   final Color kirDugunuKrem = const Color(0xFFFDFBF7);
   final Color gulKurusu = const Color(0xFFB76E79);
   final Color yaprakYesili = const Color(0xFF8A9A86);
 
-  // Fonksiyon imzasını netleştirerek minified tip hatasını çözüyoruz
-  Future<void> _handleUpload() async {
+  // Doğrudan ana sınıf içinde çalıştırarak minified JS hatasını kökten çözüyoruz
+  Future<void> _pickAndUploadAnilar() async {
     setState(() {
       _isUploading = true;
       _progress = 0.0;
     });
 
     try {
-      await UploadService().pickAndUploadAnilar(
-        onProgress: (double progress) {
-          setState(() {
-            _progress = progress;
-          });
-        },
-        onSuccess: (String message) {
-          setState(() {
-            _isUploading = false;
-          });
+      final ImagePicker picker = ImagePicker();
+      final List<XFile> files = await picker.pickMultipleMedia();
+
+      if (files.isEmpty) {
+        setState(() {
+          _isUploading = false;
+        });
+        return;
+      }
+
+      int totalFiles = files.length;
+      int completedFiles = 0;
+
+      for (var file in files) {
+        String storagePath =
+            'tampon_anilar/${DateTime.now().millisecondsSinceEpoch}_${file.name}';
+        final storageRef = FirebaseStorage.instance.ref().child(storagePath);
+
+        final rawBytes = await file.readAsBytes();
+        UploadTask uploadTask = storageRef.putData(
+          rawBytes,
+          SettableMetadata(contentType: file.mimeType),
+        );
+
+        uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(message), backgroundColor: yaprakYesili),
-            );
+            double fileProgress =
+                (snapshot.bytesTransferred / snapshot.totalBytes);
+            setState(() {
+              _progress = ((completedFiles + fileProgress) / totalFiles) * 100;
+            });
           }
-        },
-        onError: (String error) {
-          setState(() {
-            _isUploading = false;
-          });
-          if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(error), backgroundColor: Colors.redAccent),
-            );
-          }
-        },
-      );
+        });
+
+        await uploadTask;
+
+        final url = Uri.parse(
+          'https://us-central1-wedding-1c8cc.cloudfunctions.net/shareAnilar',
+        );
+        await http.post(
+          url,
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'storagePath': storagePath,
+            'filename': file.name,
+            'mimeType': file.mimeType ?? 'image/jpeg',
+          }),
+        );
+
+        completedFiles++;
+      }
+
+      setState(() {
+        _isUploading = false;
+      });
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: const Text("Harika! Tüm anıların başarıyla yüklendi. 🤍"),
+            backgroundColor: yaprakYesili,
+          ),
+        );
+      }
     } catch (e) {
       setState(() {
         _isUploading = false;
       });
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Yükleme işlemi başarısız: $e"),
+            backgroundColor: Colors.redAccent,
+          ),
+        );
+      }
     }
   }
 
@@ -166,7 +214,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                       ),
                     ] else ...[
                       ElevatedButton.icon(
-                        onPressed: _handleUpload,
+                        onPressed: _pickAndUploadAnilar,
                         icon: const Icon(
                           Icons.add_photo_alternate_outlined,
                           size: 22,
