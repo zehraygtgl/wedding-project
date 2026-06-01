@@ -18,7 +18,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: const Color(0xFFB76E79),
+        colorSchemeSeed: const Color(0xFFB76E79), // Gül kurusu temeli
       ),
       home: const WeddingUploadPage(),
     );
@@ -37,11 +37,11 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
   int _totalFiles = 0;
   int _currentFileIndex = 0;
 
-  // Lüks ve Net Okunabilir Renk Paleti
+  // Cıvıl Cıvıl Yaz Düğünü Renk Paleti
   final Color gulKurusu = const Color(0xFFB76E79);
-  final Color altinSarisi = const Color(0xFFD4AF37);
-  final Color canliAltin = const Color(0xFFF3E5AB);
-  final Color luksKrem = const Color(0xFFFFF8EE);
+  final Color yaprakYesili = const Color(0xFF6B8E23); // Canlı kır yesili
+  final Color yazGunesi = const Color(0xFFFAA462); // Sıcak neşeli turuncu/sarı
+  final Color derinSiyah = const Color(0xFF333333);
 
   void _startNativeWebUpload() {
     final html.FileUploadInputElement uploadInput =
@@ -132,51 +132,54 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
     return Scaffold(
       body: Stack(
         children: [
-          // Arka Plan Görseli
+          // 1. Yeni Arka Plan: Capcanlı, gün ışığıyla yıkanan, çiçekli neşeli bir yaz kır düğünü konsepti
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
                 image: NetworkImage(
-                  'https://images.unsplash.com/photo-1469371670807-013ccf25f16a?q=80&w=1600',
+                  'https://images.unsplash.com/photo-1515934751635-c81c6bc9a2d8?q=80&w=1600',
                 ),
                 fit: BoxFit.cover,
               ),
             ),
           ),
-          // Arka planı hafif yumuşatan karanlık katman
-          Container(color: Colors.black.withOpacity(0.4)),
+          // Görselin renklerini söndürmeyen, sadece yaz aylarının o soft sıcaklığını veren çok hafif bir filtre
+          Container(color: Colors.white.withOpacity(0.15)),
 
-          // Ana Kart alanı
+          // 2. Cıvıl Cıvıl Parlayan Kristal Kart
           Center(
             child: Padding(
               padding: const EdgeInsets.all(20.0),
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(24),
                 child: BackdropFilter(
-                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+                  filter: ImageFilter.blur(
+                    sigmaX: 10,
+                    sigmaY: 10,
+                  ), // Kristal cam parlaklığı
                   child: Container(
                     constraints: const BoxConstraints(maxWidth: 400),
                     decoration: BoxDecoration(
-                      // 💡 KARTIN RENGİ KOYULAŞTIRILDI: Beyaz yazılar ve altın detaylar net gözüksün diye
+                      // 💡 KART BEMBEYAZ PARILTIYA DÖNDÜ: İç açıcı yaz enerjisi
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Colors.black.withOpacity(0.55),
-                          Colors.black.withOpacity(0.35),
+                          Colors.white.withOpacity(0.85),
+                          Colors.white.withOpacity(0.65),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                        width: 1,
+                        width: 1.5,
                         color: gulKurusu.withOpacity(
-                          0.4,
-                        ), // Gül kurusu zarif çerçeve
+                          0.5,
+                        ), // Çerçeveniz neşeli gül kurusu
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black38,
-                          blurRadius: 20,
+                          color: yaprakYesili.withOpacity(0.15),
+                          blurRadius: 25,
                           offset: const Offset(0, 10),
                         ),
                       ],
@@ -188,30 +191,29 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Minimal Kırmızı Kalp Alanı
-                        const Text("❤️", style: TextStyle(fontSize: 26)),
+                        // Sevimli Kırmızı Kalp
+                        const Text("❤️", style: TextStyle(fontSize: 28)),
                         const SizedBox(height: 16),
 
-                        // İsimler (Canlı Altın Sarısı)
+                        // İsimler (Gül Kurusu asaletinde ve kocaman)
                         Text(
                           "Hilal & Oğuz",
                           style: TextStyle(
                             fontSize: 34,
                             fontWeight: FontWeight.bold,
-                            color:
-                                canliAltin, // Beyaz yerine altın rengiyle belirginleştirildi
-                            letterSpacing: 1.2,
+                            color: gulKurusu,
+                            letterSpacing: 1,
                           ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 6),
-                        // Alt Başlık (Zarif lüks krem tonu)
+                        // Alt Başlık (Canlı Yaprak Yeşili Tonu)
                         Text(
                           "B İ R  Ö M Ü R  B O Y U  M U T L U L U Ğ A . . . ✨",
                           style: TextStyle(
                             fontSize: 10,
-                            fontWeight: FontWeight.w600,
-                            color: luksKrem.withOpacity(0.9),
+                            fontWeight: FontWeight.w700,
+                            color: yaprakYesili,
                             letterSpacing: 2,
                           ),
                           textAlign: TextAlign.center,
@@ -219,31 +221,30 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
 
                         const SizedBox(height: 24),
 
-                        // İnce Çizgi Ayraç
+                        // Zarif Renkli Ayraç
                         Container(
                           width: 80,
-                          height: 1,
-                          color: gulKurusu.withOpacity(0.5),
+                          height: 1.5,
+                          color: gulKurusu.withOpacity(0.3),
                         ),
                         const SizedBox(height: 24),
 
-                        // Senin İstediğin Kısa ve Net Soru Yazısı (Bembeyaz ve parlak)
+                        // Senin İstediğin O Kısa, Net Soru Cümlesi (Derin siyahla çok net okunuyor)
                         Text(
                           "Bu güzel gecede çektiğiniz fotoğrafları ve videoları bizimle paylaşır mısınız? 🤍",
-                          style: const TextStyle(
-                            fontSize: 14,
-                            color: Colors
-                                .white, // Tam beyaz yaparak okunurluğu zirveye çıkardık
+                          style: TextStyle(
+                            fontSize: 14.5,
+                            color:
+                                derinSiyah, // Beyaz kartın üzerinde cam gibi net okunuyor
                             height: 1.5,
-                            fontWeight: FontWeight.w400,
-                            letterSpacing: 0.2,
+                            fontWeight: FontWeight.w500,
                           ),
                           textAlign: TextAlign.center,
                         ),
 
                         const SizedBox(height: 36),
 
-                        // Durum / Buton Kontrolü
+                        // 3. Durum / Buton Kontrolü
                         if (_isUploading) ...[
                           Column(
                             children: [
@@ -252,9 +253,9 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                                 child: LinearProgressIndicator(
                                   value: _currentFileIndex / _totalFiles,
                                   minHeight: 6,
-                                  backgroundColor: Colors.white10,
+                                  backgroundColor: gulKurusu.withOpacity(0.1),
                                   valueColor: AlwaysStoppedAnimation<Color>(
-                                    canliAltin,
+                                    gulKurusu,
                                   ),
                                 ),
                               ),
@@ -262,28 +263,38 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                               Text(
                                 "Anılar aktarılıyor... ✨",
                                 style: TextStyle(
-                                  color: canliAltin,
-                                  fontWeight: FontWeight.w500,
+                                  color: gulKurusu,
+                                  fontWeight: FontWeight.bold,
                                   fontSize: 13,
                                 ),
                               ),
                               Text(
                                 "$_currentFileIndex / $_totalFiles dosya yüklendi",
                                 style: TextStyle(
-                                  color: luksKrem.withOpacity(0.6),
+                                  color: derinSiyah.withOpacity(0.6),
                                   fontSize: 11,
                                 ),
                               ),
                             ],
                           ),
                         ] else ...[
-                          // Buton Alanı
+                          // Neşeli, Cıvıl Cıvıl Yaz Butonu
                           Container(
                             decoration: BoxDecoration(
                               borderRadius: BorderRadius.circular(30),
                               gradient: LinearGradient(
-                                colors: [gulKurusu, altinSarisi],
+                                colors: [
+                                  gulKurusu,
+                                  yazGunesi,
+                                ], // Enerjik, güneşli geçiş
                               ),
+                              boxShadow: [
+                                BoxShadow(
+                                  color: gulKurusu.withOpacity(0.3),
+                                  blurRadius: 15,
+                                  offset: const Offset(0, 5),
+                                ),
+                              ],
                             ),
                             child: ElevatedButton.icon(
                               onPressed: _startNativeWebUpload,
