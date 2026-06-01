@@ -1,0 +1,4 @@
+/build/
+/.dart_tool/
+/functions/node_modules/
+.env
