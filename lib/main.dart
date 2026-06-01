@@ -37,7 +37,7 @@ class WeddingUploadPage extends StatefulWidget {
 class _WeddingUploadPageState extends State<WeddingUploadPage> {
   bool _isUploading = false;
 
-  final Color kirDugunuKrem = const Color(0xFFFDFBF7);
+  final Color kirDugunuKrem = const Color.fromARGB(255, 247, 253, 252);
   final Color gulKurusu = const Color(0xFFB76E79);
   final Color yaprakYesili = const Color(0xFF8A9A86);
 
