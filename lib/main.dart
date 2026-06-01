@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'upload_service.dart'; // Yazdığımız yükleme servisini bağlıyoruz
+import 'upload_service.dart';
 
 void main() {
   runApp(const MyApp());
@@ -13,7 +13,10 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Hilal & Oğuz Düğün Anıları',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(useMaterial3: true),
+      theme: ThemeData(
+        useMaterial3: true,
+        colorSchemeSeed: const Color(0xFFB76E79), // Gül kurusu tabanlı tema
+      ),
       home: const WeddingUploadPage(),
     );
   }
@@ -27,44 +30,54 @@ class WeddingUploadPage extends StatefulWidget {
 }
 
 class _WeddingUploadPageState extends State<WeddingUploadPage> {
-  final UploadService _uploadService = UploadService();
+  // Sıkıştırma hatasını önlemek için metotları statik veya doğrudan fonksiyon içinde çağırıyoruz
   bool _isUploading = false;
   double _progress = 0.0;
 
-  // Bohem kır düğünü renk paletimiz
   final Color kirDugunuKrem = const Color(0xFFFDFBF7);
   final Color gulKurusu = const Color(0xFFB76E79);
   final Color yaprakYesili = const Color(0xFF8A9A86);
 
-  void _handleUpload() async {
+  // Fonksiyon imzasını netleştirerek minified tip hatasını çözüyoruz
+  Future<void> _handleUpload() async {
     setState(() {
       _isUploading = true;
       _progress = 0.0;
     });
 
-    await _uploadService.pickAndUploadAnilar(
-      onProgress: (progress) {
-        setState(() {
-          _progress = progress;
-        });
-      },
-      onSuccess: (message) {
-        setState(() {
-          _isUploading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(message), backgroundColor: yaprakYesili),
-        );
-      },
-      onError: (error) {
-        setState(() {
-          _isUploading = false;
-        });
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text(error), backgroundColor: Colors.redAccent),
-        );
-      },
-    );
+    try {
+      await UploadService().pickAndUploadAnilar(
+        onProgress: (double progress) {
+          setState(() {
+            _progress = progress;
+          });
+        },
+        onSuccess: (String message) {
+          setState(() {
+            _isUploading = false;
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(message), backgroundColor: yaprakYesili),
+            );
+          }
+        },
+        onError: (String error) {
+          setState(() {
+            _isUploading = false;
+          });
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(content: Text(error), backgroundColor: Colors.redAccent),
+            );
+          }
+        },
+      );
+    } catch (e) {
+      setState(() {
+        _isUploading = false;
+      });
+    }
   }
 
   @override
@@ -76,9 +89,9 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
           image: DecorationImage(
             image: NetworkImage(
               'https://images.unsplash.com/photo-1519741497674-611481863552?q=80&w=1000',
-            ), // Düzeltilen şık kır düğünü görseli
+            ),
             fit: BoxFit.cover,
-            opacity: 0.06, // Arka planda çok hafif durması için
+            opacity: 0.06,
           ),
         ),
         child: Center(
@@ -91,9 +104,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                 borderRadius: BorderRadius.circular(24),
               ),
               child: Container(
-                constraints: const BoxConstraints(
-                  maxWidth: 450,
-                ), // Webde çok yayılmasın diye limitledik
+                constraints: const BoxConstraints(maxWidth: 450),
                 padding: const EdgeInsets.symmetric(
                   horizontal: 24.0,
                   vertical: 40.0,
@@ -101,7 +112,6 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Şık Başlık
                     Text(
                       "Hilal & Oğuz 🌿",
                       style: TextStyle(
@@ -134,8 +144,6 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 36),
-
-                    // Durum Çubuğu veya Yükleme Butonu
                     if (_isUploading) ...[
                       SizedBox(
                         width: 70,
@@ -157,7 +165,6 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                         ),
                       ),
                     ] else ...[
-                      // Estetik Butonumuz
                       ElevatedButton.icon(
                         onPressed: _handleUpload,
                         icon: const Icon(
