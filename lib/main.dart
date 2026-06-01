@@ -34,18 +34,14 @@ class WeddingUploadPage extends StatefulWidget {
 
 class _WeddingUploadPageState extends State<WeddingUploadPage> {
   bool _isUploading = false;
-  double _progress = 0.0;
 
-  // Bohem kır düğünü renk paletimiz
   final Color kirDugunuKrem = const Color(0xFFFDFBF7);
   final Color gulKurusu = const Color(0xFFB76E79);
   final Color yaprakYesili = const Color(0xFF8A9A86);
 
-  // Doğrudan ana sınıf içinde çalıştırarak minified JS hatasını kökten çözüyoruz
   Future<void> _pickAndUploadAnilar() async {
     setState(() {
       _isUploading = true;
-      _progress = 0.0;
     });
 
     try {
@@ -59,29 +55,18 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
         return;
       }
 
-      int totalFiles = files.length;
-      int completedFiles = 0;
-
       for (var file in files) {
         String storagePath =
             'tampon_anilar/${DateTime.now().millisecondsSinceEpoch}_${file.name}';
         final storageRef = FirebaseStorage.instance.ref().child(storagePath);
 
         final rawBytes = await file.readAsBytes();
+
+        // Hata veren stream (listen) yapısı yerine doğrudan putData ile yüklemeyi başlatıp bekliyoruz
         UploadTask uploadTask = storageRef.putData(
           rawBytes,
           SettableMetadata(contentType: file.mimeType),
         );
-
-        uploadTask.snapshotEvents.listen((TaskSnapshot snapshot) {
-          if (mounted) {
-            double fileProgress =
-                (snapshot.bytesTransferred / snapshot.totalBytes);
-            setState(() {
-              _progress = ((completedFiles + fileProgress) / totalFiles) * 100;
-            });
-          }
-        });
 
         await uploadTask;
 
@@ -97,8 +82,6 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
             'mimeType': file.mimeType ?? 'image/jpeg',
           }),
         );
-
-        completedFiles++;
       }
 
       setState(() {
@@ -120,7 +103,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text("Yükleme işlemi başarısız: $e"),
+            content: Text("Yükleme işlemi başarısız: ${e.toString()}"),
             backgroundColor: Colors.redAccent,
           ),
         );
@@ -194,18 +177,17 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                     const SizedBox(height: 36),
                     if (_isUploading) ...[
                       SizedBox(
-                        width: 70,
-                        height: 70,
+                        width: 50,
+                        height: 50,
                         child: CircularProgressIndicator(
-                          value: _progress / 100,
                           valueColor: AlwaysStoppedAnimation<Color>(gulKurusu),
                           backgroundColor: yaprakYesili.withOpacity(0.15),
-                          strokeWidth: 6,
+                          strokeWidth: 5,
                         ),
                       ),
                       const SizedBox(height: 20),
                       Text(
-                        "Anılarınız aktarılıyor... %${_progress.toStringAsFixed(0)}",
+                        "Anılarınız aktarılıyor...",
                         style: TextStyle(
                           fontWeight: FontWeight.w600,
                           color: gulKurusu,
