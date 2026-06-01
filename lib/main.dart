@@ -143,7 +143,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
             ),
           ),
           // Gece ambiyansı katmanı
-          Container(color: Colors.black.withOpacity(0.5)),
+          Container(color: Colors.black.withValues(alpha: 128)),
 
           // 2. Ana İçerik Masası
           Center(
@@ -163,20 +163,18 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Colors.white.withOpacity(0.25),
-                          Colors.white.withOpacity(0.05),
+                          Colors.white.withValues(alpha: 26),
+                          Colors.white.withValues(alpha: 13),
                         ],
                       ),
                       borderRadius: BorderRadius.circular(28),
                       border: Border.all(
                         width: 1.5,
-                        color: Colors.white.withOpacity(
-                          0.3,
-                        ), // Parlak kristal kenarlık
-                      ),
+                        color: Colors.white.withValues(alpha: 77),
+                      ), // Parlak kristal kenarlık
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.25),
+                          color: Colors.black.withValues(alpha: 64),
                           blurRadius: 30,
                           offset: const Offset(0, 15),
                         ),
@@ -193,10 +191,10 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                         Container(
                           padding: const EdgeInsets.all(10),
                           decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
+                            color: Colors.white.withValues(alpha: 26),
                             shape: BoxShape.circle,
                             border: Border.all(
-                              color: canliAltin.withOpacity(0.4),
+                              color: canliAltin.withValues(alpha: 102),
                               width: 1,
                             ),
                           ),
@@ -212,8 +210,6 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                           "Hilal & Oğuz",
                           style: TextStyle(
                             fontSize: 36,
-                            fontFamily:
-                                'Playfair Display', // Eğer font yüklenmediyse şık bir serif tarzı alır
                             fontWeight: FontWeight.bold,
                             color: canliAltin,
                             shadows: [
@@ -228,13 +224,14 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 6),
+                        // Alt başlık senin isteğine göre güncellendi
                         Text(
-                          "S O N S U Z A  D E K  E V E T",
+                          "B İ R  Ö M Ü R  B O Y U  M U T L U L U Ğ A . . . ✨",
                           style: TextStyle(
                             fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white.withOpacity(0.9),
-                            letterSpacing: 4,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.white.withValues(alpha: 230),
+                            letterSpacing: 2,
                           ),
                           textAlign: TextAlign.center,
                         ),
@@ -257,17 +254,19 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                         ),
                         const SizedBox(height: 30),
 
+                        // Yazı boyutu küçültüldü ve şampanya emojisi beyaz kalple değiştirildi
                         Text(
-                          "Bu muhteşem geceyi ölümsüzleştiren en özel fotoğraf ve videolarınızı aşağıdaki butonu kullanarak bizimle paylaşabilirsiniz. 🥂",
+                          "Bu güzel gecede çektiğiniz fotoğrafları ve videoları bizimle paylaşır mısınız? 🤍",
                           style: TextStyle(
-                            fontSize: 14,
-                            color: Colors.white.withOpacity(0.85),
-                            height: 1.6,
+                            fontSize:
+                                14, // Kısa olduğu için puntosunu hafifçe artırıp tam dengeli yaptık
+                            color: Colors.white.withValues(alpha: 220),
+                            height: 1.5,
                             fontWeight: FontWeight.w300,
+                            letterSpacing: 0.3,
                           ),
                           textAlign: TextAlign.center,
                         ),
-
                         const SizedBox(height: 40),
 
                         // 3. Durum Alanı (Sayaç veya Lüks Buton)
@@ -299,7 +298,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                               Text(
                                 "$_currentFileIndex / $_totalFiles dosya yüklendi",
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.7),
+                                  color: Colors.white.withValues(alpha: 180),
                                   fontSize: 12,
                                 ),
                               ),
@@ -315,7 +314,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: gulKurusu.withOpacity(0.4),
+                                  color: gulKurusu.withValues(alpha: 102),
                                   blurRadius: 15,
                                   offset: const Offset(0, 5),
                                 ),
@@ -326,7 +325,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                               icon: const Icon(
                                 Icons.auto_awesome_rounded,
                                 size: 20,
-                              ), // Yıldız parıltısı efekti ikonu
+                              ),
                               label: const Text(
                                 "Anıları Seç ve Gönder",
                                 style: TextStyle(
@@ -336,8 +335,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                                 ),
                               ),
                               style: ElevatedButton.styleFrom(
-                                backgroundColor: Colors
-                                    .transparent, // Arka planı container'dan alıyor
+                                backgroundColor: Colors.transparent,
                                 foregroundColor: Colors.white,
                                 shadowColor: Colors.transparent,
                                 padding: const EdgeInsets.symmetric(
