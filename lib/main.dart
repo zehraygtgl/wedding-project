@@ -1,7 +1,9 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:image_picker/image_picker.dart';
 import 'dart:convert';
+import 'dart:html' as html; // Tarayıcının yerel dosya seçicisini kullanmak için
 import 'package:http/http.dart' as http;
 
 void main() {
@@ -39,76 +41,89 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
   final Color gulKurusu = const Color(0xFFB76E79);
   final Color yaprakYesili = const Color(0xFF8A9A86);
 
-  Future<void> _pickAndUploadAnilar() async {
-    setState(() {
-      _isUploading = true;
-    });
+  // Saf HTML yapısıyla çoklu fotoğraf ve video seçimi
+  void _startNativeWebUpload() {
+    final html.FileUploadInputElement uploadInput =
+        html.FileUploadInputElement();
+    uploadInput.multiple = true; // Çoklu seçimi aktifleştirir
+    uploadInput.accept = 'image/*,video/*'; // Hem fotoğraf hem video kabul eder
 
-    try {
-      final ImagePicker picker = ImagePicker();
-      final List<XFile> files = await picker.pickMultipleMedia();
+    uploadInput.click(); // Kullanıcı için dosya seçme penceresini açar
 
-      if (files.isEmpty) {
+    uploadInput.onChange.listen((e) async {
+      final files = uploadInput.files;
+      if (files == null || files.isEmpty) return;
+
+      setState(() {
+        _isUploading = true;
+      });
+
+      try {
+        for (var file in files) {
+          String storagePath =
+              'tampon_anilar/${DateTime.now().millisecondsSinceEpoch}_${file.name}';
+          final storageRef = FirebaseStorage.instance.ref().child(storagePath);
+
+          // Dosyayı tarayıcı hafızasından doğrudan okuyoruz
+          final reader = html.FileReader();
+          reader.readAsArrayBuffer(file);
+
+          await reader.onLoadEnd.first;
+          final List<int> bytes = reader.result as List<int>;
+
+          // Firebase Storage'a yükleme yapıyoruz
+          UploadTask uploadTask = storageRef.putData(
+            Uint8List.fromList(bytes),
+            SettableMetadata(contentType: file.type),
+          );
+
+          await uploadTask;
+
+          // Sunucu kopyalama tetiklemesi
+          final url = Uri.parse(
+            'https://us-central1-wedding-1c8cc.cloudfunctions.net/shareAnilar',
+          );
+          await http.post(
+            url,
+            headers: {'Content-Type': 'application/json'},
+            body: jsonEncode({
+              'storagePath': storagePath,
+              'filename': file.name,
+              'mimeType': file.type,
+            }),
+          );
+        }
+
         setState(() {
           _isUploading = false;
         });
-        return;
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text(
+                "Harika! Tüm anıların başarıyla yüklendi. 🤍",
+              ),
+              backgroundColor: yaprakYesili,
+            ),
+          );
+        }
+      } catch (err) {
+        setState(() {
+          _isUploading = false;
+        });
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text(
+                "Bir yükleme hatası oluştu, lütfen tekrar deneyin.",
+              ),
+              backgroundColor: Colors.redAccent,
+            ),
+          );
+        }
       }
-
-      for (var file in files) {
-        String storagePath =
-            'tampon_anilar/${DateTime.now().millisecondsSinceEpoch}_${file.name}';
-        final storageRef = FirebaseStorage.instance.ref().child(storagePath);
-
-        final rawBytes = await file.readAsBytes();
-
-        // Hata veren stream (listen) yapısı yerine doğrudan putData ile yüklemeyi başlatıp bekliyoruz
-        UploadTask uploadTask = storageRef.putData(
-          rawBytes,
-          SettableMetadata(contentType: file.mimeType),
-        );
-
-        await uploadTask;
-
-        final url = Uri.parse(
-          'https://us-central1-wedding-1c8cc.cloudfunctions.net/shareAnilar',
-        );
-        await http.post(
-          url,
-          headers: {'Content-Type': 'application/json'},
-          body: jsonEncode({
-            'storagePath': storagePath,
-            'filename': file.name,
-            'mimeType': file.mimeType ?? 'image/jpeg',
-          }),
-        );
-      }
-
-      setState(() {
-        _isUploading = false;
-      });
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text("Harika! Tüm anıların başarıyla yüklendi. 🤍"),
-            backgroundColor: yaprakYesili,
-          ),
-        );
-      }
-    } catch (e) {
-      setState(() {
-        _isUploading = false;
-      });
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Yükleme işlemi başarısız: ${e.toString()}"),
-            backgroundColor: Colors.redAccent,
-          ),
-        );
-      }
-    }
+    });
   }
 
   @override
@@ -196,7 +211,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                       ),
                     ] else ...[
                       ElevatedButton.icon(
-                        onPressed: _pickAndUploadAnilar,
+                        onPressed: _startNativeWebUpload,
                         icon: const Icon(
                           Icons.add_photo_alternate_outlined,
                           size: 22,
