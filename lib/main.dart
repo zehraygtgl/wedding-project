@@ -61,20 +61,20 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
               'tampon_anilar/${DateTime.now().millisecondsSinceEpoch}_${file.name}';
           final storageRef = FirebaseStorage.instance.ref().child(storagePath);
 
-          // 💡 KRİTİK DEĞİŞİKLİK:
-          // Veriyi Dart byte'larına çevirmek yerine doğrudan tarayıcının yerel Blob nesnesi olarak yüklüyoruz.
-          // Bu sayece derleyici (dart2js) türleri kesinlikle birbiriyle karıştıramaz!
-          final html.Blob fileBlob = file;
+          // 💡 SİHİRLİ DOKUNUŞ:
+          // Blob nesnesini 'dynamic' yaparak derleyicinin (dart2js) release modunda
+          // tür denetimi yapmasını ve 'minified subtype' hatası fırlatmasını tamamen engelliyoruz.
+          final dynamic safeBlob = file;
 
-          // putBlob metodu web release modundaki kilitlenmeleri tamamen çözer
+          // Türü gizlenmiş yerel web blob'unu doğrudan fırlatıyoruz
           UploadTask uploadTask = storageRef.putBlob(
-            fileBlob,
+            safeBlob,
             SettableMetadata(contentType: file.type),
           );
 
           await uploadTask;
 
-          // Sunucu kopyalama tetiklemesi (Senin tıkır tıkır çalışan fonksiyonun)
+          // Sunucu kopyalama tetiklemesi
           final url = Uri.parse(
             'https://us-central1-wedding-1c8cc.cloudfunctions.net/shareAnilar',
           );
