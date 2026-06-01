@@ -37,10 +37,11 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
   int _totalFiles = 0;
   int _currentFileIndex = 0;
 
-  // Lüks Düğün Paleti
+  // Lüks ve Net Okunabilir Renk Paleti
   final Color gulKurusu = const Color(0xFFB76E79);
   final Color altinSarisi = const Color(0xFFD4AF37);
   final Color canliAltin = const Color(0xFFF3E5AB);
+  final Color luksKrem = const Color(0xFFFFF8EE);
 
   void _startNativeWebUpload() {
     final html.FileUploadInputElement uploadInput =
@@ -131,7 +132,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
     return Scaffold(
       body: Stack(
         children: [
-          // 1. Arka Plan: Derin ve Işıltılı Kır Düğünü Görseli
+          // Arka Plan Görseli
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
@@ -142,199 +143,160 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
               ),
             ),
           ),
-          // Gece ambiyansı katmanı
-          Container(color: Colors.black.withOpacity(0.5)),
+          // Arka planı hafif yumuşatan karanlık katman
+          Container(color: Colors.black.withOpacity(0.4)),
 
-          // 2. Ana İçerik Masası
+          // Ana Kart alanı
           Center(
             child: Padding(
               padding: const EdgeInsets.all(20.0),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(28),
+                borderRadius: BorderRadius.circular(24),
                 child: BackdropFilter(
-                  filter: ImageFilter.blur(
-                    sigmaX: 16,
-                    sigmaY: 16,
-                  ), // Premium Cam Efekti
+                  filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
                   child: Container(
-                    constraints: const BoxConstraints(maxWidth: 420),
+                    constraints: const BoxConstraints(maxWidth: 400),
                     decoration: BoxDecoration(
+                      // 💡 KARTIN RENGİ KOYULAŞTIRILDI: Beyaz yazılar ve altın detaylar net gözüksün diye
                       gradient: LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
                         colors: [
-                          Colors.white.withOpacity(0.25),
-                          Colors.white.withOpacity(0.05),
+                          Colors.black.withOpacity(0.55),
+                          Colors.black.withOpacity(0.35),
                         ],
                       ),
-                      borderRadius: BorderRadius.circular(28),
+                      borderRadius: BorderRadius.circular(24),
                       border: Border.all(
-                        width: 1.5,
-                        color: Colors.white.withOpacity(
-                          0.3,
-                        ), // Parlak kristal kenarlık
+                        width: 1,
+                        color: gulKurusu.withOpacity(
+                          0.4,
+                        ), // Gül kurusu zarif çerçeve
                       ),
                       boxShadow: [
                         BoxShadow(
-                          color: Colors.black.withOpacity(0.25),
-                          blurRadius: 30,
-                          offset: const Offset(0, 15),
+                          color: Colors.black38,
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
                         ),
                       ],
                     ),
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 32.0,
-                      vertical: 50.0,
+                      horizontal: 28.0,
+                      vertical: 48.0,
                     ),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Işıltılı Kalp Süslemesi
-                        Container(
-                          padding: const EdgeInsets.all(10),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.1),
-                            shape: BoxShape.circle,
-                            border: Border.all(
-                              color: canliAltin.withOpacity(0.4),
-                              width: 1,
-                            ),
-                          ),
-                          child: const Text(
-                            "❤️",
-                            style: TextStyle(fontSize: 24),
-                          ),
-                        ),
-                        const SizedBox(height: 20),
+                        // Minimal Kırmızı Kalp Alanı
+                        const Text("❤️", style: TextStyle(fontSize: 26)),
+                        const SizedBox(height: 16),
 
-                        // İsimler (Zarif, büyük ve parıltılı)
+                        // İsimler (Canlı Altın Sarısı)
                         Text(
                           "Hilal & Oğuz",
                           style: TextStyle(
-                            fontSize: 36,
+                            fontSize: 34,
                             fontWeight: FontWeight.bold,
-                            color: canliAltin,
-                            shadows: [
-                              Shadow(
-                                color: Colors.black45,
-                                offset: const Offset(1, 2),
-                                blurRadius: 4,
-                              ),
-                            ],
-                            letterSpacing: 1.5,
+                            color:
+                                canliAltin, // Beyaz yerine altın rengiyle belirginleştirildi
+                            letterSpacing: 1.2,
                           ),
                           textAlign: TextAlign.center,
                         ),
                         const SizedBox(height: 6),
-                        // Alt başlık senin isteğine göre güncellendi
+                        // Alt Başlık (Zarif lüks krem tonu)
                         Text(
                           "B İ R  Ö M Ü R  B O Y U  M U T L U L U Ğ A . . . ✨",
                           style: TextStyle(
-                            fontSize: 11,
+                            fontSize: 10,
                             fontWeight: FontWeight.w600,
-                            color: Colors.white.withOpacity(0.9),
+                            color: luksKrem.withOpacity(0.9),
                             letterSpacing: 2,
                           ),
                           textAlign: TextAlign.center,
                         ),
 
-                        const SizedBox(height: 30),
+                        const SizedBox(height: 24),
 
-                        // Özel Degrade Ayraç Çizgisi
+                        // İnce Çizgi Ayraç
                         Container(
-                          width: 120,
-                          height: 2,
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              colors: [
-                                Colors.transparent,
-                                altinSarisi,
-                                Colors.transparent,
-                              ],
-                            ),
-                          ),
+                          width: 80,
+                          height: 1,
+                          color: gulKurusu.withOpacity(0.5),
                         ),
-                        const SizedBox(height: 30),
+                        const SizedBox(height: 24),
 
-                        // Yazı boyutu küçültüldü ve şampanya emojisi beyaz kalple değiştirildi
+                        // Senin İstediğin Kısa ve Net Soru Yazısı (Bembeyaz ve parlak)
                         Text(
                           "Bu güzel gecede çektiğiniz fotoğrafları ve videoları bizimle paylaşır mısınız? 🤍",
-                          style: TextStyle(
-                            fontSize:
-                                14, // Kısa olduğu için puntosunu hafifçe artırıp tam dengeli yaptık
-                            color: Colors.white.withOpacity(0.85),
+                          style: const TextStyle(
+                            fontSize: 14,
+                            color: Colors
+                                .white, // Tam beyaz yaparak okunurluğu zirveye çıkardık
                             height: 1.5,
-                            fontWeight: FontWeight.w300,
-                            letterSpacing: 0.3,
+                            fontWeight: FontWeight.w400,
+                            letterSpacing: 0.2,
                           ),
                           textAlign: TextAlign.center,
                         ),
 
-                        const SizedBox(height: 40),
+                        const SizedBox(height: 36),
 
-                        // 3. Durum Alanı (Sayaç veya Lüks Buton)
+                        // Durum / Buton Kontrolü
                         if (_isUploading) ...[
                           Column(
                             children: [
-                              // Şık İlerleme Çubuğu (Progress Bar)
                               ClipRRect(
                                 borderRadius: BorderRadius.circular(10),
                                 child: LinearProgressIndicator(
                                   value: _currentFileIndex / _totalFiles,
-                                  minHeight: 8,
-                                  backgroundColor: Colors.white12,
+                                  minHeight: 6,
+                                  backgroundColor: Colors.white10,
                                   valueColor: AlwaysStoppedAnimation<Color>(
                                     canliAltin,
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 16),
+                              const SizedBox(height: 12),
                               Text(
-                                "Harika anılar aktarılıyor... ✨",
+                                "Anılar aktarılıyor... ✨",
                                 style: TextStyle(
                                   color: canliAltin,
                                   fontWeight: FontWeight.w500,
-                                  fontSize: 14,
+                                  fontSize: 13,
                                 ),
                               ),
-                              const SizedBox(height: 4),
                               Text(
                                 "$_currentFileIndex / $_totalFiles dosya yüklendi",
                                 style: TextStyle(
-                                  color: Colors.white.withOpacity(0.7),
-                                  fontSize: 12,
+                                  color: luksKrem.withOpacity(0.6),
+                                  fontSize: 11,
                                 ),
                               ),
                             ],
                           ),
                         ] else ...[
-                          // Göz Alıcı, Lüks Tasarımlı Buton
+                          // Buton Alanı
                           Container(
                             decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(35),
+                              borderRadius: BorderRadius.circular(30),
                               gradient: LinearGradient(
                                 colors: [gulKurusu, altinSarisi],
                               ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: gulKurusu.withOpacity(0.4),
-                                  blurRadius: 15,
-                                  offset: const Offset(0, 5),
-                                ),
-                              ],
                             ),
                             child: ElevatedButton.icon(
                               onPressed: _startNativeWebUpload,
                               icon: const Icon(
                                 Icons.auto_awesome_rounded,
-                                size: 20,
+                                size: 18,
                               ),
                               label: const Text(
                                 "Anıları Seç ve Gönder",
                                 style: TextStyle(
-                                  fontSize: 15,
+                                  fontSize: 14,
                                   fontWeight: FontWeight.bold,
-                                  letterSpacing: 0.5,
+                                  letterSpacing: 0.3,
                                 ),
                               ),
                               style: ElevatedButton.styleFrom(
@@ -342,11 +304,11 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                                 foregroundColor: Colors.white,
                                 shadowColor: Colors.transparent,
                                 padding: const EdgeInsets.symmetric(
-                                  horizontal: 36,
-                                  vertical: 18,
+                                  horizontal: 32,
+                                  vertical: 16,
                                 ),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(35),
+                                  borderRadius: BorderRadius.circular(30),
                                 ),
                               ),
                             ),
