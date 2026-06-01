@@ -1,6 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_storage/firebase_storage.dart'; // Storage'ı Dart tarafında sadece başlatıcı olarak tutuyoruz
-import 'dart:convert';
 import 'dart:html' as html;
 import 'package:http/http.dart' as http;
 
@@ -42,8 +40,8 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
   void _startNativeWebUpload() {
     final html.FileUploadInputElement uploadInput =
         html.FileUploadInputElement();
-    uploadInput.multiple = true;
-    uploadInput.accept = 'image/*,video/*';
+    uploadInput.multiple = true; // Çoklu seçim aktif
+    uploadInput.accept = 'image/*,video/*'; // Hem fotoğraf hem video kabul
 
     uploadInput.click();
 
@@ -56,40 +54,41 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
       });
 
       try {
+        // Backend'deki Cloud Function adresimiz
+        final url = Uri.parse(
+          'https://us-central1-wedding-1c8cc.cloudfunctions.net/shareAnilar',
+        );
+
         for (var file in files) {
-          String storagePath =
-              'tampon_anilar/${DateTime.now().millisecondsSinceEpoch}_${file.name}';
+          // Dosyayı form verisi (multipart) olarak hazırlıyoruz
+          final request = http.MultipartRequest('POST', url);
 
-          // 💡 MINIFIED ÇÖZÜMÜ:
-          // Firebase Storage'ın web taraflı putBlob metodu doğrudan HTML File nesnesini kabul eder.
-          // js_interop hatasını aşmak için nesneyi doğrudan FirebaseStorage kütüphanesine paslıyoruz.
-          final storageRef = FirebaseStorage.instance.ref().child(storagePath);
+          // Dosyanın tarayıcı hafızasındaki yerinden okuma yapıyoruz
+          final reader = html.FileReader();
+          reader.readAsArrayBuffer(file);
+          await reader.onLoadEnd.first;
 
-          // putBlob çağrısını dynamic bir köprü üzerinden yaparak derleyici denetimini tamamen kırıyoruz
-          final dynamic rawStorageRef = storageRef;
-          UploadTask uploadTask = rawStorageRef.putBlob(
-            file,
-            SettableMetadata(contentType: file.type),
+          final List<int> bytes = reader.result as List<int>;
+
+          // Formun içine dosyayı ekliyoruz
+          final multipartFile = http.MultipartFile.fromBytes(
+            'file', // Backend'in okuyacağı değişken adı
+            bytes,
+            filename: file.name,
           );
 
-          await uploadTask;
+          request.files.add(multipartFile);
 
-          // 💡 404 HATASI ÇÖZÜMÜ: Cloud Function tetikleme URL'i
-          final url = Uri.parse(
-            'https://us-central1-wedding-1c8cc.cloudfunctions.net/shareAnilar',
-          );
-          final response = await http.post(
-            url,
-            headers: {'Content-Type': 'application/json'},
-            body: jsonEncode({
-              'storagePath': storagePath,
-              'filename': file.name,
-              'mimeType': file.type,
-            }),
-          );
+          // İhtiyaç duyulursa backend'e ek bilgi göndermek için field ekliyoruz
+          request.fields['filename'] = file.name;
+          request.fields['mimeType'] = file.type;
 
-          if (response.statusCode == 404) {
-            throw "Cloud Function bulunamadı (404). Lütfen fonksiyon adını veya URL'ini kontrol edin.";
+          // İsteyip gönderiyoruz
+          final streamedResponse = await request.send();
+          final response = await http.Response.fromStream(streamedResponse);
+
+          if (response.statusCode != 200 && response.statusCode != 201) {
+            throw "Sunucu hatası: ${response.statusCode}";
           }
         }
 
