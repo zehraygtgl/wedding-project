@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        colorSchemeSeed: const Color(0xFFB76E79), // Gül kurusu tabanlı palet
+        colorSchemeSeed: const Color(0xFFB76E79),
       ),
       home: const WeddingUploadPage(),
     );
@@ -36,10 +36,10 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
   int _totalFiles = 0;
   int _currentFileIndex = 0;
 
-  // Bohem kır düğünü renk paleti
+  // Minimalist ve Asil Renk Paleti
   final Color kirDugunuKrem = const Color(0xFFFDFBF7);
   final Color gulKurusu = const Color(0xFFB76E79);
-  final Color yaprakYesili = const Color(0xFF8A9A86);
+  final Color softSiyah = const Color(0xFF2C2C2C);
 
   void _startNativeWebUpload() {
     final html.FileUploadInputElement uploadInput =
@@ -102,10 +102,8 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text(
-                "Harika! Tüm anıların başarıyla yüklendi. 🤍",
-              ),
-              backgroundColor: yaprakYesili,
+              content: const Text("Tüm anılarınız başarıyla yüklendi. 🤍"),
+              backgroundColor: gulKurusu,
               behavior: SnackBarBehavior.floating,
             ),
           );
@@ -133,7 +131,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
       backgroundColor: kirDugunuKrem,
       body: Stack(
         children: [
-          // Arka Plan: Şık, loş ve masalsı bir kır düğünü masa konsepti görseli
+          // Arka Plan: Masalsı ve loş kır düğünü ambiyansı
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
@@ -144,146 +142,142 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
               ),
             ),
           ),
-          // Görselin üzerine asil durması ve yazıları okunur kılması için soft bir gölge katmanı
-          Container(color: Colors.black.withOpacity(0.4)),
-          // Ana İçerik Kartı
+          // Karartma katmanı (Zarafeti öne çıkarmak için hafifletildi)
+          Container(color: Colors.black.withOpacity(0.45)),
+          // Ana Davetiye Kartı
           Center(
             child: Padding(
-              padding: const EdgeInsets.all(20.0),
-              child: Card(
-                elevation: 12,
-                shadowColor: Colors.black45,
-                color: Colors.white.withOpacity(0.93),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(30),
+              padding: const EdgeInsets.all(24.0),
+              child: Container(
+                constraints: const BoxConstraints(maxWidth: 400),
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.96),
+                  borderRadius: BorderRadius.circular(20),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.15),
+                      blurRadius: 20,
+                      offset: const Offset(0, 10),
+                    ),
+                  ],
                 ),
-                child: Container(
-                  constraints: const BoxConstraints(maxWidth: 420),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 28.0,
-                    vertical: 44.0,
-                  ),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Zarif Boho Çiçek Detayı veya Süsleme Simgesi
-                      Icon(
-                        Icons.wb_twilight_rounded,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 32.0,
+                  vertical: 48.0,
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Başlık (Yaprak kaldırıldı, zarif bir kalp eklendi)
+                    Text(
+                      "Hilal & Oğuz ❤️",
+                      style: TextStyle(
+                        fontSize: 30,
+                        fontWeight:
+                            FontWeight.w300, // Daha ince ve asil bir duruş
+                        color: softSiyah,
+                        letterSpacing: 1.2,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      "DÜĞÜN ANI PAYLAŞIMI",
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w600,
                         color: gulKurusu,
-                        size: 36,
+                        letterSpacing: 3, // Premium davetiye havası
                       ),
-                      const SizedBox(height: 12),
-                      // Başlık
-                      Text(
-                        "Hilal & Oğuz 🌿",
-                        style: TextStyle(
-                          fontSize: 34,
-                          fontWeight: FontWeight.bold,
-                          color: yaprakYesili,
-                          letterSpacing: 1.5,
-                        ),
-                        textAlign: TextAlign.center,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 28),
+                    // Minimal Çizgi Ayraç
+                    Container(
+                      width: 40,
+                      height: 1,
+                      color: gulKurusu.withOpacity(0.4),
+                    ),
+                    const SizedBox(height: 28),
+                    Text(
+                      "Bu özel geceye ait en güzel fotoğraf ve videolarınızı yükleyerek anılarımızı bizimle paylaşabilirsiniz.",
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: softSiyah.withOpacity(0.7),
+                        height: 1.6,
+                        fontWeight: FontWeight.w400,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        "Düğün Anı Paylaşımı",
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.w400,
-                          color: Colors.black87,
-                          letterSpacing: 2,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 20),
-                      // İnce Şık Ayraç Çizgisi
-                      Container(
-                        width: 60,
-                        height: 1.5,
-                        color: gulKurusu.withOpacity(0.5),
-                      ),
-                      const SizedBox(height: 20),
-                      const Text(
-                        "Bu büyüleyici geceye ait en güzel fotoğraf ve videolarınızı yükleyerek anılarımızı bizimle birlikte ölümsüzleştirebilirsiniz. 🤍",
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.black54,
-                          height: 1.6,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      const SizedBox(height: 40),
-                      // Durum Alanı (Yükleniyor veya Buton)
-                      if (_isUploading) ...[
-                        Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            SizedBox(
-                              width: 80,
-                              height: 80,
-                              child: CircularProgressIndicator(
-                                value: _currentFileIndex / _totalFiles,
-                                valueColor: AlwaysStoppedAnimation<Color>(
-                                  gulKurusu,
-                                ),
-                                backgroundColor: yaprakYesili.withOpacity(0.15),
-                                strokeWidth: 5,
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 44),
+                    // Sayaç ve Yükleme Alanı
+                    if (_isUploading) ...[
+                      Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          SizedBox(
+                            width: 70,
+                            height: 70,
+                            child: CircularProgressIndicator(
+                              value: _currentFileIndex / _totalFiles,
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                gulKurusu,
                               ),
+                              backgroundColor: gulKurusu.withOpacity(0.1),
+                              strokeWidth: 4,
                             ),
-                            Text(
-                              "$_currentFileIndex/$_totalFiles",
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: yaprakYesili,
-                                fontSize: 16,
-                              ),
-                            ),
-                          ],
-                        ),
-                        const SizedBox(height: 24),
-                        Text(
-                          "Anılarınız aktarılıyor...\n($_currentFileIndex / $_totalFiles dosya gönderildi)",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontWeight: FontWeight.w600,
-                            color: gulKurusu,
-                            fontSize: 14,
-                            height: 1.4,
                           ),
-                        ),
-                      ] else ...[
-                        // Büyük ve Şık Yükleme Butonu
-                        ElevatedButton.icon(
-                          onPressed: _startNativeWebUpload,
-                          icon: const Icon(
-                            Icons.add_photo_alternate_rounded,
-                            size: 24,
-                          ),
-                          label: const Text(
-                            "Fotoğraf / Video Seç ve Gönder",
+                          Text(
+                            "$_currentFileIndex/$_totalFiles",
                             style: TextStyle(
-                              fontSize: 15,
-                              fontWeight: FontWeight.bold,
-                              letterSpacing: 0.5,
+                              fontWeight: FontWeight.w600,
+                              color: softSiyah,
+                              fontSize: 14,
                             ),
                           ),
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: gulKurusu,
-                            foregroundColor: Colors.white,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 28,
-                              vertical: 18,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(35),
-                            ),
-                            elevation: 4,
-                            shadowColor: gulKurusu.withOpacity(0.4),
+                        ],
+                      ),
+                      const SizedBox(height: 20),
+                      Text(
+                        "Anılar gönderiliyor...\n($_currentFileIndex / $_totalFiles yükleniyor)",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontWeight: FontWeight.w500,
+                          color: gulKurusu,
+                          fontSize: 13,
+                          height: 1.4,
+                        ),
+                      ),
+                    ] else ...[
+                      // Şık, Sade Buton tasarımı
+                      ElevatedButton.icon(
+                        onPressed: _startNativeWebUpload,
+                        icon: const Icon(Icons.upload_file_rounded, size: 20),
+                        label: const Text(
+                          "Fotoğraf veya Video Gönder",
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.3,
                           ),
                         ),
-                      ],
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: gulKurusu,
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 32,
+                            vertical: 16,
+                          ),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(
+                              12,
+                            ), // Keskin boho köşeler yerine daha kibar geçiş
+                          ),
+                          elevation: 0, // Düz, modern, minimalist görünüm
+                        ),
+                      ),
                     ],
-                  ),
+                  ],
                 ),
               ),
             ),
