@@ -1,9 +1,7 @@
-import 'dart:typed_data';
-
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:convert';
-import 'dart:html' as html; // Tarayıcının yerel dosya seçicisini kullanmak için
+import 'dart:html' as html;
 import 'package:http/http.dart' as http;
 
 void main() {
@@ -37,18 +35,17 @@ class WeddingUploadPage extends StatefulWidget {
 class _WeddingUploadPageState extends State<WeddingUploadPage> {
   bool _isUploading = false;
 
-  final Color kirDugunuKrem = const Color.fromARGB(255, 247, 253, 252);
+  final Color kirDugunuKrem = const Color(0xFFFDFBF7);
   final Color gulKurusu = const Color(0xFFB76E79);
   final Color yaprakYesili = const Color(0xFF8A9A86);
 
-  // Saf HTML yapısıyla çoklu fotoğraf ve video seçimi
   void _startNativeWebUpload() {
     final html.FileUploadInputElement uploadInput =
         html.FileUploadInputElement();
-    uploadInput.multiple = true; // Çoklu seçimi aktifleştirir
-    uploadInput.accept = 'image/*,video/*'; // Hem fotoğraf hem video kabul eder
+    uploadInput.multiple = true;
+    uploadInput.accept = 'image/*,video/*';
 
-    uploadInput.click(); // Kullanıcı için dosya seçme penceresini açar
+    uploadInput.click();
 
     uploadInput.onChange.listen((e) async {
       final files = uploadInput.files;
@@ -64,22 +61,20 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
               'tampon_anilar/${DateTime.now().millisecondsSinceEpoch}_${file.name}';
           final storageRef = FirebaseStorage.instance.ref().child(storagePath);
 
-          // Dosyayı tarayıcı hafızasından doğrudan okuyoruz
-          final reader = html.FileReader();
-          reader.readAsArrayBuffer(file);
+          // 💡 KRİTİK DEĞİŞİKLİK:
+          // Veriyi Dart byte'larına çevirmek yerine doğrudan tarayıcının yerel Blob nesnesi olarak yüklüyoruz.
+          // Bu sayece derleyici (dart2js) türleri kesinlikle birbiriyle karıştıramaz!
+          final html.Blob fileBlob = file;
 
-          await reader.onLoadEnd.first;
-          final List<int> bytes = reader.result as List<int>;
-
-          // Firebase Storage'a yükleme yapıyoruz
-          UploadTask uploadTask = storageRef.putData(
-            Uint8List.fromList(bytes),
+          // putBlob metodu web release modundaki kilitlenmeleri tamamen çözer
+          UploadTask uploadTask = storageRef.putBlob(
+            fileBlob,
             SettableMetadata(contentType: file.type),
           );
 
           await uploadTask;
 
-          // Sunucu kopyalama tetiklemesi
+          // Sunucu kopyalama tetiklemesi (Senin tıkır tıkır çalışan fonksiyonun)
           final url = Uri.parse(
             'https://us-central1-wedding-1c8cc.cloudfunctions.net/shareAnilar',
           );
@@ -115,7 +110,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: Text("Hata Detayı: ${err.toString()}"),
+              content: Text("Yükleme hatası: ${err.toString()}"),
               backgroundColor: Colors.redAccent,
             ),
           );
