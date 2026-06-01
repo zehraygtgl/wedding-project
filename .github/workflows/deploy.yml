@@ -14,7 +14,7 @@ jobs:
       - run: flutter pub get
       - run: flutter build web --release --base-href "/wedding-project/"
       - name: Deploy to GitHub Pages
-        uses: Actions-R-Us/actions-gh-pages@v4
+        uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: ./build/web
