@@ -115,9 +115,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text(
-                "Bir yükleme hatası oluştu, lütfen tekrar deneyin.",
-              ),
+              content: Text("Hata Detayı: ${err.toString()}"),
               backgroundColor: Colors.redAccent,
             ),
           );
