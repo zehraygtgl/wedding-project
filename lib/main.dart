@@ -27,7 +27,7 @@ class WeddingApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Bizim Düğün Anıları',
+      title: 'Düğün Anıları',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         // Senin o sevdiğin şık gül kurusu / rose-colored paletimiz 🤍
