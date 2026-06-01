@@ -42,5 +42,22 @@
     * https://docs.flutter.dev/platform-integration/web/initialization
   -->
   <script src="flutter_bootstrap.js" async></script>
+  <script>
+  // Flutter'ın minified hatasına takılmadan doğrudan Firebase Storage'a yükleme yapan yerel fonksiyon
+  window.uploadBlobToFirebase = async function(bucketPath, blob, mimeType) {
+    try {
+      // Firebase Storage referansını doğrudan tarayıcı üzerinden yakalıyoruz
+      const storageRef = firebase.storage().ref().child(bucketPath);
+      const metadata = { contentType: mimeType };
+      
+      // Ham yüklemeyi başlatıp bitmesini bekliyoruz
+      await storageRef.put(blob, metadata);
+      return true;
+    } catch (error) {
+      console.error("JS Storage Error:", error);
+      throw error;
+    }
+  }
+</script>
 </body>
 </html>

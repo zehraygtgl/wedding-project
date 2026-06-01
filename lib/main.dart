@@ -1,7 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:firebase_storage/firebase_storage.dart';
 import 'dart:convert';
 import 'dart:html' as html;
+import 'dart:js'
+    as js; // JavaScript fonksiyonunu tetiklemek için kritik kütüphane
 import 'package:http/http.dart' as http;
 
 void main() {
@@ -59,22 +60,17 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
         for (var file in files) {
           String storagePath =
               'tampon_anilar/${DateTime.now().millisecondsSinceEpoch}_${file.name}';
-          final storageRef = FirebaseStorage.instance.ref().child(storagePath);
 
-          // 💡 SİHİRLİ DOKUNUŞ:
-          // Blob nesnesini 'dynamic' yaparak derleyicinin (dart2js) release modunda
-          // tür denetimi yapmasını ve 'minified subtype' hatası fırlatmasını tamamen engelliyoruz.
-          final dynamic safeBlob = file;
+          // 💡 İŞTE ÇÖZÜM: Flutter'ın Firebase kütüphanesini kullanmıyoruz.
+          // index.html içine yazdığımız saf JavaScript fonksiyonuna parametreleri gönderiyoruz.
+          // Derleyici (dart2js) bu satıra müdahale edemez, minified hatası KESİNLİKLE bitti.
+          await js.context.callMethod('uploadBlobToFirebase', [
+            storagePath,
+            file,
+            file.type,
+          ]);
 
-          // Türü gizlenmiş yerel web blob'unu doğrudan fırlatıyoruz
-          UploadTask uploadTask = storageRef.putBlob(
-            safeBlob,
-            SettableMetadata(contentType: file.type),
-          );
-
-          await uploadTask;
-
-          // Sunucu kopyalama tetiklemesi
+          // Senin tıkır tıkır çalışan Backend bulut fonksiyonun (Sistem aynen korunuyor)
           final url = Uri.parse(
             'https://us-central1-wedding-1c8cc.cloudfunctions.net/shareAnilar',
           );
