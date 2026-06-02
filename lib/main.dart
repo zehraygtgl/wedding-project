@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
-import 'dart:convert';
+import 'dart:typed_data'; // Uint8List için şart
 import 'dart:html' as html;
-import 'package:http/http.dart' as http;
 import 'package:google_fonts/google_fonts.dart';
+import 'package:firebase_core/firebase_core.dart'; // Başlatıcı paketimiz
+import 'package:firebase_storage/firebase_storage.dart'; // Engel tanımayan asıl paketimiz
+import 'firebase_options.dart'; // Firebase CLI ayarların
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
   runApp(const MyApp());
 }
 
@@ -49,6 +53,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
     super.dispose();
   }
 
+  // 💡 İŞTE BURASI: Kökten çözümü sağlayan, http paketini tamamen çöpe atan yeni yükleme motoru
   void _startNativeWebUpload() {
     final html.FileUploadInputElement uploadInput =
         html.FileUploadInputElement();
@@ -59,7 +64,6 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
 
     uploadInput.click();
 
-    // ... üstteki kodlar aynen kalıyor ...
     uploadInput.onChange.listen((e) async {
       final files = uploadInput.files;
       if (files == null || files.isEmpty) return;
@@ -71,72 +75,52 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
       });
 
       try {
-        final url = Uri.parse(
-          'https://us-central1-wedding-1c8cc.cloudfunctions.net/shareAnilar',
-        );
-
         for (var file in files) {
           setState(() {
             _currentFileIndex++;
           });
 
-          // 1. AŞAMA: Sunucudan yükleme adresi istiyoruz
-          final responseToken = await http
-              .post(
-                url,
-                headers: {
-                  "Content-Type": "application/json",
-                  "Accept": "application/json",
-                },
-                body: jsonEncode({
-                  "filename": file.name,
-                  "mimeType": file.type,
-                  "uploaderName": staticUploaderName.isEmpty
-                      ? "Anonim"
-                      : staticUploaderName,
-                }),
-              )
-              .timeout(const Duration(seconds: 30));
-
-          if (responseToken.statusCode != 200) {
-            throw "İzin alınamadı: ${responseToken.statusCode}";
-          }
-
-          final responseData =
-              jsonDecode(responseToken.body) as Map<String, dynamic>;
-          final String uploadUrl = responseData['uploadUrl'];
-
-          // Dosya verisini okuyoruz
+          // Dosyayı tarayıcı hafızasından doğrudan ham byte olarak okuyoruz
           final reader = html.FileReader();
           reader.readAsArrayBuffer(file);
           await reader.onLoadEnd.first;
           final List<int> bytes = reader.result as List<int>;
 
-          // 2. AŞAMA: Firebase REST API standartlarında doğrudan buluta yüklüyoruz
-          // Büyük 4K videolar için süreyi 20 dakikaya çıkarıyoruz
-          final storageResponse = await http
-              .post(
-                Uri.parse(uploadUrl),
-                headers: {
-                  "Content-Type": file.type,
-                  // Meta verisine gönderen kişiyi ekliyoruz ki Drive'a o isimle yazsın
-                  "X-Goog-Meta-Uploader": staticUploaderName.isEmpty
-                      ? "Anonim"
-                      : staticUploaderName,
-                },
-                body: bytes,
-              )
-              .timeout(const Duration(minutes: 20));
+          // İsimdeki boşluk ve özel karakter krizlerini temizliyoruz
+          final cleanFilename = file.name.replaceAll(
+            RegExp(r'[^a-zA-Z0-9.\\-_]'),
+            '_',
+          );
+          final int timestamp = DateTime.now().millisecondsSinceEpoch;
 
-          if (storageResponse.statusCode != 200 &&
-              storageResponse.statusCode != 201) {
-            throw "Buluta aktarım başarısız: ${storageResponse.statusCode}";
-          }
+          // Firebase Storage üzerindeki hedef yolumuz
+          final storagePath = 'tampon_anilar/${timestamp}_$cleanFilename';
+
+          // 🚀 HTTP İSTEĞİ ATMIYORUZ! Doğrudan SDK üzerinden kapıyı çalıyoruz (CORS imkansız)
+          final storageRef = FirebaseStorage.instance.ref().child(storagePath);
+
+          // Arka plandaki Drive'a taşıma fonksiyonunun uploader adını okuyabilmesi için customMetadata ekliyoruz
+          final metadata = SettableMetadata(
+            contentType: file.type,
+            customMetadata: {
+              'uploader': staticUploaderName.isEmpty
+                  ? 'Anonim'
+                  : staticUploaderName,
+            },
+          );
+
+          // Büyük 4K videolar için parça parça akış başlatan asıl yükleme tetikleyicisi
+          final uploadTask = storageRef.putData(
+            Uint8List.fromList(bytes),
+            metadata,
+          );
+          await uploadTask;
         }
 
         setState(() {
           _isUploading = false;
         });
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -161,7 +145,6 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
         }
       }
     });
-    // ... alttaki tasarım kodları aynen kalıyor ...
   }
 
   @override
