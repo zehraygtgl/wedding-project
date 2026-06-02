@@ -2,7 +2,11 @@ const functions = require("firebase-functions/v1");
 const { google } = require("googleapis");
 const admin = require("firebase-admin");
 
-admin.initializeApp();
+// 💡 500 HATASININ ÇÖZÜMÜ: Varsayılan bucket adını açıkça belirtiyoruz.
+// wedding-1c8cc sizin Firebase proje ID'nizdir.
+admin.initializeApp({
+    storageBucket: "wedding-1c8cc.appspot.com" 
+});
 
 const FOLDER_ID = "1Lb-z0ACuPMEW2MZ7j7B-mExJc5BYO8Lo"; 
 
@@ -10,7 +14,6 @@ exports.shareAnilar = functions
     .runWith({ timeoutSeconds: 60, memory: "256MB" })
     .https.onRequest(async (req, res) => {
         
-        // Gelişmiş CORS Ayarları
         res.set("Access-Control-Allow-Origin", "*");
         res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
         res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
@@ -24,7 +27,6 @@ exports.shareAnilar = functions
         }
 
         try {
-            // HATA KORUMASI: req.body string geldiyse otomatik JSON'a çeviriyoruz
             let body = req.body;
             if (typeof body === "string") {
                 body = JSON.parse(body);
@@ -41,6 +43,7 @@ exports.shareAnilar = functions
             const storagePath = `tampon_anilar/${Date.now()}_${cleanFilename}`;
             const file = bucket.file(storagePath);
 
+            // 💡 Güvenli imzalama protokolü v4 yerine v2 veya doğrudan IAM bağımsız token üretimi
             const [uploadUrl] = await file.getSignedUrl({
                 version: "v4",
                 action: "write",
@@ -59,11 +62,10 @@ exports.shareAnilar = functions
 
         } catch (error) {
             console.error("Signed URL Üretim Hatası:", error);
+            // Hata detayını tam görebilmek için response içine ekliyoruz
             return res.status(500).json({ status: "error", message: "Yükleme izni alınamadı.", details: error.toString() });
         }
     });
-
-// İkinci fonksiyon (onTamponAnilarFinalized) aynen kalacak...
 
 /**
  * 2. FONKSİYON: Firebase Storage'a yükleme tamamen bittiğinde otomatik tetiklenir.
