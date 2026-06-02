@@ -59,6 +59,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
 
     uploadInput.click();
 
+    // ... üstteki kodlar aynen kalıyor ...
     uploadInput.onChange.listen((e) async {
       final files = uploadInput.files;
       if (files == null || files.isEmpty) return;
@@ -79,7 +80,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
             _currentFileIndex++;
           });
 
-          // 1. AŞAMA: Sunucudan yükleme izni (Signed URL) talep ediyoruz
+          // 1. AŞAMA: Sunucudan yükleme adresi istiyoruz
           final responseToken = await http
               .post(
                 url,
@@ -98,16 +99,11 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
               .timeout(const Duration(seconds: 30));
 
           if (responseToken.statusCode != 200) {
-            throw "Sunucu izin vermedi (Hata Kodu: ${responseToken.statusCode}). Lütfen backend deployunun yapıldığından emin olun.";
+            throw "İzin alınamadı: ${responseToken.statusCode}";
           }
 
           final responseData =
               jsonDecode(responseToken.body) as Map<String, dynamic>;
-
-          if (!responseData.containsKey('uploadUrl')) {
-            throw "Sunucu geçerli bir yükleme linki üretmedi.";
-          }
-
           final String uploadUrl = responseData['uploadUrl'];
 
           // Dosya verisini okuyoruz
@@ -116,30 +112,31 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
           await reader.onLoadEnd.first;
           final List<int> bytes = reader.result as List<int>;
 
-          // 2. AŞAMA: Doğrudan Firebase Storage'a yükleme yapıyoruz (15 dakika limitli)
+          // 2. AŞAMA: Firebase REST API standartlarında doğrudan buluta yüklüyoruz
+          // Büyük 4K videolar için süreyi 20 dakikaya çıkarıyoruz
           final storageResponse = await http
-              .put(
+              .post(
                 Uri.parse(uploadUrl),
                 headers: {
                   "Content-Type": file.type,
-                  "x-goog-meta-uploader": staticUploaderName.isEmpty
+                  // Meta verisine gönderen kişiyi ekliyoruz ki Drive'a o isimle yazsın
+                  "X-Goog-Meta-Uploader": staticUploaderName.isEmpty
                       ? "Anonim"
                       : staticUploaderName,
                 },
                 body: bytes,
               )
-              .timeout(const Duration(minutes: 15));
+              .timeout(const Duration(minutes: 20));
 
           if (storageResponse.statusCode != 200 &&
               storageResponse.statusCode != 201) {
-            throw "Bulut havuzuna yükleme başarısız oldu: ${storageResponse.statusCode}";
+            throw "Buluta aktarım başarısız: ${storageResponse.statusCode}";
           }
         }
 
         setState(() {
           _isUploading = false;
         });
-
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -164,6 +161,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
         }
       }
     });
+    // ... alttaki tasarım kodları aynen kalıyor ...
   }
 
   @override
