@@ -18,8 +18,7 @@ exports.onTamponAnilarFinalized = functions
         memory: "1GB",        
         secrets: ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REFRESH_TOKEN"] 
     })
-    .storage.bucket("wedding-1c8cc.appspot.com") // 💡 Hangi depoyu dinleyeceğini KESİN olarak kilitledik
-    .object()
+    .storage.object() // 💡 ÇÖZÜM BURADA: .bucket(...) kısıtlamasını tamamen sildik!
     .onFinalize(async (object) => {
         console.log("SİSTEM UYANDI! Yeni dosya Storage'a geldi:", object.name);
 
@@ -28,7 +27,7 @@ exports.onTamponAnilarFinalized = functions
             return null;
         }
 
-        const bucket = admin.storage().bucket("wedding-1c8cc.appspot.com");
+        const bucket = admin.storage().bucket(); // 💡 Burayı da otomatik varsayılan depoya çektik
         const file = bucket.file(object.name);
 
         try {
