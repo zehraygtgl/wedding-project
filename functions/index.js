@@ -2,84 +2,37 @@ const functions = require("firebase-functions/v1");
 const { google } = require("googleapis");
 const admin = require("firebase-admin");
 
-admin.initializeApp({
-    storageBucket: "wedding-1c8cc.appspot.com"
-});
+admin.initializeApp(); 
 
 const FOLDER_ID = "1Lb-z0ACuPMEW2MZ7j7B-mExJc5BYO8Lo"; 
 
-/**
- * 1. FONKSİYON: Bulut IAM izinlerine takılmayan, standart Firebase token altyapısıyla
- * doğrudan yükleme adresi üretir. 500 hatasını KESİNLİKLE çözer.
- */
-exports.shareAnilar = functions
-    .runWith({ timeoutSeconds: 60, memory: "256MB" })
-    .https.onRequest(async (req, res) => {
-        
-        res.set("Access-Control-Allow-Origin", "*");
-        res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-        res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+// Eski yükleme kapısı (Artık kullanılmıyor ama eski tarayıcılar hata vermesin diye boş tutuyoruz)
+exports.shareAnilar = functions.https.onRequest((req, res) => {
+    res.status(200).send("Bu uç nokta artık kullanılmıyor, doğrudan Storage'a yükleniyor.");
+});
 
-        if (req.method === "OPTIONS") {
-            return res.status(204).send("");
-        }
-
-        if (req.method !== "POST") {
-            return res.status(405).json({ status: "error", message: "Sadece POST desteklenir." });
-        }
-
-        try {
-            let body = req.body;
-            if (typeof body === "string") {
-                body = JSON.parse(body);
-            }
-
-            const { filename, mimeType, uploaderName } = body;
-
-            if (!filename || !mimeType) {
-                return res.status(400).json({ status: "error", message: "filename ve mimeType zorunludur." });
-            }
-
-            const bucket = admin.storage().bucket();
-            const cleanFilename = filename.replace(/[^a-zA-Z0-9.\\-_]/g, "_");
-            const uniqueName = `${Date.now()}_${cleanFilename}`;
-            const storagePath = `tampon_anilar/${uniqueName}`;
-
-            // 💡 IAM İZİNLERİNİ BYPASS EDEN FORMÜL:
-            // Google Cloud yerine Firebase'in kendi doğrudan REST upload kapısını kullanıyoruz.
-            const uploadUrl = `https://firebasestorage.googleapis.com/v0/b/${bucket.name}/o?name=${encodeURIComponent(storagePath)}`;
-
-            return res.status(200).json({
-                status: "success",
-                uploadUrl: uploadUrl,
-                storagePath: storagePath,
-                isNativeRest: true // Flutter'a istek tipinin değiştiğini söylüyoruz
-            });
-
-        } catch (error) {
-            console.error("Yükleme Kapısı Üretim Hatası:", error);
-            return res.status(500).json({ status: "error", message: "İşlem başarısız.", details: error.toString() });
-        }
-    });
-
-/**
- * 2. FONKSİYON: Sürücüye (Google Drive) asenkron taşıma yapan ana motorumuz.
- * Olduğu gibi korunuyor, resumable moduyla büyük dosyaları taşır.
- */
+// ASIL MOTOR: Storage'a dosya düştüğünde uyanıp Drive'a atan tetikleyici
 exports.onTamponAnilarFinalized = functions
     .runWith({ 
         timeoutSeconds: 540, 
         memory: "1GB",        
         secrets: ["GOOGLE_CLIENT_ID", "GOOGLE_CLIENT_SECRET", "GOOGLE_REFRESH_TOKEN"] 
     })
-    .storage.object()
+    .storage.bucket("wedding-1c8cc.appspot.com") // 💡 Hangi depoyu dinleyeceğini KESİN olarak kilitledik
+    .object()
     .onFinalize(async (object) => {
-        if (!object.name.startsWith("tampon_anilar/")) return null;
+        console.log("SİSTEM UYANDI! Yeni dosya Storage'a geldi:", object.name);
 
-        const bucket = admin.storage().bucket();
+        if (!object.name.startsWith("tampon_anilar/")) {
+            console.log("Dosya tampon_anilar klasöründe değil, işlem iptal.");
+            return null;
+        }
+
+        const bucket = admin.storage().bucket("wedding-1c8cc.appspot.com");
         const file = bucket.file(object.name);
 
         try {
+            console.log("Drive API yetkilendirmesi başlatılıyor...");
             const oauth2Client = new google.auth.OAuth2(
                 process.env.GOOGLE_CLIENT_ID,
                 process.env.GOOGLE_CLIENT_SECRET,
@@ -101,6 +54,7 @@ exports.onTamponAnilarFinalized = functions
                 body: file.createReadStream()
             };
 
+            console.log("Drive'a aktarım başladı...");
             await driveInstance.files.create({
                 resource: fileMetadata,
                 media: media,
@@ -108,11 +62,12 @@ exports.onTamponAnilarFinalized = functions
                 uploadType: "resumable"
             });
 
+            console.log("Başarıyla Drive'a taşındı. Storage temizleniyor...");
             await file.delete();
             return null;
 
         } catch (error) {
-            console.error("Google Drive Taşıma Hatası:", error);
+            console.error("KRİTİK HATA! Drive'a taşıma başarısız:", error);
             throw error;
         }
     });

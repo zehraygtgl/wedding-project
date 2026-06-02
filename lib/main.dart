@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:typed_data';
-import 'dart:html' as html; // 💡 Geri döndü: Web'in kendi hatasız seçicisi
+import 'dart:html' as html;
 import 'package:google_fonts/google_fonts.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -61,11 +61,9 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
     super.dispose();
   }
 
-  // 💡 İŞTE BURASI: Dış paketleri çöpe attık. Tamamen native web tetikleyicisi ve Firebase birleşimi.
   void _startNativeWebUpload() {
     final String staticUploaderName = _nameController.text;
 
-    // Tarayıcının kendi dosya seçicisini çağırıyoruz
     final html.FileUploadInputElement uploadInput =
         html.FileUploadInputElement();
     uploadInput.multiple = true;
@@ -88,13 +86,11 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
             _currentFileIndex++;
           });
 
-          // Dosya verisini ham byte olarak okuyoruz
           final reader = html.FileReader();
           reader.readAsArrayBuffer(file);
           await reader.onLoadEnd.first;
           final List<int> bytes = reader.result as List<int>;
 
-          // İsimleri güvenli hale getiriyoruz
           final cleanFilename = file.name.replaceAll(
             RegExp(r'[^a-zA-Z0-9.\\-_]'),
             '_',
@@ -113,17 +109,12 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
             },
           );
 
-          // CORS hatasını engelleyen Firebase kütüphanesiyle yükleme yapıyoruz
           final uploadTask = storageRef.putData(
             Uint8List.fromList(bytes),
             metadata,
           );
           await uploadTask;
         }
-
-        setState(() {
-          _isUploading = false;
-        });
 
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -135,9 +126,6 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
           );
         }
       } catch (err) {
-        setState(() {
-          _isUploading = false;
-        });
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
@@ -146,6 +134,15 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
               behavior: SnackBarBehavior.floating,
             ),
           );
+        }
+      } finally {
+        // 💡 KESİN ÇÖZÜM: Yükleme bloğu bittiğinde, her şeyi sıfırlayıp butonu geri getiriyoruz.
+        if (mounted) {
+          setState(() {
+            _isUploading = false;
+            _totalFiles = 0;
+            _currentFileIndex = 0;
+          });
         }
       }
     });
@@ -279,6 +276,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                     ),
                     const SizedBox(height: 14),
 
+                    // BUTON / PROGRESS BAR MANTIĞI
                     if (_isUploading) ...[
                       Column(
                         children: [
@@ -286,7 +284,9 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                           ClipRRect(
                             borderRadius: BorderRadius.circular(10),
                             child: LinearProgressIndicator(
-                              value: _currentFileIndex / _totalFiles,
+                              value:
+                                  _currentFileIndex /
+                                  (_totalFiles == 0 ? 1 : _totalFiles),
                               minHeight: 6,
                               backgroundColor: vizonAltin.withOpacity(0.15),
                               valueColor: AlwaysStoppedAnimation<Color>(
