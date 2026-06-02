@@ -14,7 +14,7 @@ void main() async {
       appId: "1:1234567890:web:abcdef123456",
       messagingSenderId: "1234567890",
       projectId: "wedding-1c8cc",
-      storageBucket: "wedding-1c8cc.appspot.com",
+      storageBucket: "wedding-1c8cc.firebasestorage.app",
     ),
   );
   runApp(const MyApp());
