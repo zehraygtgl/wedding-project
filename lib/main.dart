@@ -40,9 +40,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
   final TextEditingController _nameController = TextEditingController();
 
   final Color vizonAltin = const Color(0xFFB59975);
-  final Color koyuYazi = const Color(
-    0xFF2C2C2C,
-  ); // Yazılar şık fontu göstersin diye optimize edildi
+  final Color koyuYazi = const Color(0xFF2C2C2C);
   final Color softYazi = const Color(0xFF6B6B6B);
 
   @override
@@ -71,6 +69,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
         _currentFileIndex = 0;
       });
 
+      // 💡 Flutter Yeni Yükleme Mantığı Örneği:
       try {
         final url = Uri.parse(
           'https://us-central1-wedding-1c8cc.cloudfunctions.net/shareAnilar',
@@ -81,46 +80,49 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
             _currentFileIndex++;
           });
 
-          final request = http.MultipartRequest('POST', url);
+          // 1. Aşama: Sunucudan yükleme izni (Signed URL) istiyoruz
+          final responseToken = await http.post(
+            url,
+            headers: {"Content-Type": "application/json"},
+            body: jsonEncode({
+              "filename": file.name,
+              "mimeType": file.type,
+              "uploaderName": staticUploaderName,
+            }),
+          );
 
+          if (responseToken.statusCode != 200) throw "Yükleme izni alınamadı.";
+          final responseData = jsonDecode(responseToken.body);
+          final String uploadUrl = responseData['uploadUrl'];
+
+          // Dosya verisini okuyoruz
           final reader = html.FileReader();
           reader.readAsArrayBuffer(file);
           await reader.onLoadEnd.first;
-
           final List<int> bytes = reader.result as List<int>;
 
-          final multipartFile = http.MultipartFile.fromBytes(
-            'file',
-            bytes,
-            filename: file.name,
+          // 2. Aşama: Cloud Functions'ı aradan çıkarıp doğrudan Firebase Storage'a PUT atıyoruz
+          final storageResponse = await http.put(
+            Uri.parse(uploadUrl),
+            headers: {
+              "Content-Type": file.type,
+              "x-goog-meta-uploader": staticUploaderName.isEmpty
+                  ? "Anonim"
+                  : staticUploaderName,
+            },
+            body: bytes,
           );
 
-          request.files.add(multipartFile);
-          request.fields['filename'] = file.name;
-          request.fields['mimeType'] = file.type;
-          request.fields['uploaderName'] = staticUploaderName;
-
-          final streamedResponse = await request.send();
-          final response = await http.Response.fromStream(streamedResponse);
-
-          if (response.statusCode != 200 && response.statusCode != 201) {
-            throw "Sunucu hatası: ${response.statusCode}";
+          if (storageResponse.statusCode != 200 &&
+              storageResponse.statusCode != 201) {
+            throw "Dosya yüklenemedi: ${storageResponse.statusCode}";
           }
         }
 
         setState(() {
           _isUploading = false;
         });
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: const Text("Tüm anılarınız başarıyla yüklendi. 🤍"),
-              backgroundColor: vizonAltin,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
-        }
+        // Başarı SnackBar gösterimi...
       } catch (err) {
         setState(() {
           _isUploading = false;
@@ -160,9 +162,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
               child: Container(
                 constraints: const BoxConstraints(maxWidth: 390),
                 decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(
-                    0.93,
-                  ), // Hafif saydam asil kart
+                  color: Colors.white.withOpacity(0.93),
                   borderRadius: BorderRadius.circular(32),
                   boxShadow: [
                     BoxShadow(
@@ -180,12 +180,10 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Divider(color: Colors.black12),
-                    // 💡 YENİ İSİM FONTU: İnce, kaba durmayan ve aşırı şık olan Baskerville / Garamond kombinasyonu
                     Text(
                       "Hilal & Oğuz",
                       style: GoogleFonts.pinyonScript(
-                        fontSize:
-                            52, // Kabalığı önlemek için yazı boyutunu ve rengini optimize ettik
+                        fontSize: 52,
                         color: vizonAltin,
                         fontWeight: FontWeight.w500,
                       ),
@@ -204,7 +202,6 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                     ),
                     const SizedBox(height: 10),
 
-                    // 💡 ŞIİRSEL SÖZ: Çok daha asil ve modern duran şık Lora Serif yazı tipi
                     Text(
                       "\"Anılar, kalbin\nen güzel hazinesidir.\"",
                       style: GoogleFonts.lora(
