@@ -1,14 +1,22 @@
 import 'package:flutter/material.dart';
-import 'dart:typed_data'; // Uint8List için şart
-import 'dart:html' as html;
+import 'dart:typed_data';
+import 'dart:html' as html; // 💡 Geri döndü: Web'in kendi hatasız seçicisi
 import 'package:google_fonts/google_fonts.dart';
-import 'package:firebase_core/firebase_core.dart'; // Başlatıcı paketimiz
-import 'package:firebase_storage/firebase_storage.dart'; // Engel tanımayan asıl paketimiz
-import 'firebase_options.dart'; // Firebase CLI ayarların
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_storage/firebase_storage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+
+  await Firebase.initializeApp(
+    options: const FirebaseOptions(
+      apiKey: "AIzaSyAsbEXAMPLE-KEY-HERE",
+      appId: "1:1234567890:web:abcdef123456",
+      messagingSenderId: "1234567890",
+      projectId: "wedding-1c8cc",
+      storageBucket: "wedding-1c8cc.appspot.com",
+    ),
+  );
   runApp(const MyApp());
 }
 
@@ -53,15 +61,15 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
     super.dispose();
   }
 
-  // 💡 İŞTE BURASI: Kökten çözümü sağlayan, http paketini tamamen çöpe atan yeni yükleme motoru
+  // 💡 İŞTE BURASI: Dış paketleri çöpe attık. Tamamen native web tetikleyicisi ve Firebase birleşimi.
   void _startNativeWebUpload() {
+    final String staticUploaderName = _nameController.text;
+
+    // Tarayıcının kendi dosya seçicisini çağırıyoruz
     final html.FileUploadInputElement uploadInput =
         html.FileUploadInputElement();
     uploadInput.multiple = true;
     uploadInput.accept = 'image/*,video/*';
-
-    final String staticUploaderName = _nameController.text;
-
     uploadInput.click();
 
     uploadInput.onChange.listen((e) async {
@@ -80,26 +88,22 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
             _currentFileIndex++;
           });
 
-          // Dosyayı tarayıcı hafızasından doğrudan ham byte olarak okuyoruz
+          // Dosya verisini ham byte olarak okuyoruz
           final reader = html.FileReader();
           reader.readAsArrayBuffer(file);
           await reader.onLoadEnd.first;
           final List<int> bytes = reader.result as List<int>;
 
-          // İsimdeki boşluk ve özel karakter krizlerini temizliyoruz
+          // İsimleri güvenli hale getiriyoruz
           final cleanFilename = file.name.replaceAll(
             RegExp(r'[^a-zA-Z0-9.\\-_]'),
             '_',
           );
           final int timestamp = DateTime.now().millisecondsSinceEpoch;
-
-          // Firebase Storage üzerindeki hedef yolumuz
           final storagePath = 'tampon_anilar/${timestamp}_$cleanFilename';
 
-          // 🚀 HTTP İSTEĞİ ATMIYORUZ! Doğrudan SDK üzerinden kapıyı çalıyoruz (CORS imkansız)
           final storageRef = FirebaseStorage.instance.ref().child(storagePath);
 
-          // Arka plandaki Drive'a taşıma fonksiyonunun uploader adını okuyabilmesi için customMetadata ekliyoruz
           final metadata = SettableMetadata(
             contentType: file.type,
             customMetadata: {
@@ -109,7 +113,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
             },
           );
 
-          // Büyük 4K videolar için parça parça akış başlatan asıl yükleme tetikleyicisi
+          // CORS hatasını engelleyen Firebase kütüphanesiyle yükleme yapıyoruz
           final uploadTask = storageRef.putData(
             Uint8List.fromList(bytes),
             metadata,
