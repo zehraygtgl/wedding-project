@@ -6,18 +6,14 @@ admin.initializeApp();
 
 const FOLDER_ID = "1Lb-z0ACuPMEW2MZ7j7B-mExJc5BYO8Lo"; 
 
-/**
- * 1. FONKSİYON: Gelen büyük dosyalar için Firebase Storage İmzalı URL (Signed URL) üretir.
- * Bu sayede Flutter, 5GB'lık dosyayı bile Cloud Functions'a takılmadan doğrudan Storage'a yükler.
- */
 exports.shareAnilar = functions
     .runWith({ timeoutSeconds: 60, memory: "256MB" })
     .https.onRequest(async (req, res) => {
         
-        // CORS Ayarları
+        // Gelişmiş CORS Ayarları
         res.set("Access-Control-Allow-Origin", "*");
         res.set("Access-Control-Allow-Methods", "POST, OPTIONS");
-        res.set("Access-Control-Allow-Headers", "Content-Type");
+        res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
 
         if (req.method === "OPTIONS") {
             return res.status(204).send("");
@@ -28,30 +24,33 @@ exports.shareAnilar = functions
         }
 
         try {
-            const { filename, mimeType, uploaderName } = req.body;
+            // HATA KORUMASI: req.body string geldiyse otomatik JSON'a çeviriyoruz
+            let body = req.body;
+            if (typeof body === "string") {
+                body = JSON.parse(body);
+            }
+
+            const { filename, mimeType, uploaderName } = body;
 
             if (!filename || !mimeType) {
                 return res.status(400).json({ status: "error", message: "filename ve mimeType alanları zorunludur." });
             }
 
             const bucket = admin.storage().bucket();
-            // Dosya adını benzersiz hale getiriyoruz ve meta verisine gönderen kişinin adını işliyoruz
             const cleanFilename = filename.replace(/[^a-zA-Z0-9.\\-_]/g, "_");
             const storagePath = `tampon_anilar/${Date.now()}_${cleanFilename}`;
             const file = bucket.file(storagePath);
 
-            // 15 dakika boyunca geçerli olacak güvenli bir doğrudan yükleme linki (Signed URL) üretiyoruz
             const [uploadUrl] = await file.getSignedUrl({
                 version: "v4",
                 action: "write",
-                expires: Date.now() + 15 * 60 * 1000, // 15 Dakika
+                expires: Date.now() + 15 * 60 * 1000,
                 contentType: mimeType,
                 extensionHeaders: {
                     "x-goog-meta-uploader": uploaderName || "Anonim"
                 }
             });
 
-            // Üretilen linki ve dosyanın yükleneceği yolu Flutter'a dönüyoruz
             return res.status(200).json({
                 status: "success",
                 uploadUrl: uploadUrl,
@@ -63,6 +62,8 @@ exports.shareAnilar = functions
             return res.status(500).json({ status: "error", message: "Yükleme izni alınamadı.", details: error.toString() });
         }
     });
+
+// İkinci fonksiyon (onTamponAnilarFinalized) aynen kalacak...
 
 /**
  * 2. FONKSİYON: Firebase Storage'a yükleme tamamen bittiğinde otomatik tetiklenir.

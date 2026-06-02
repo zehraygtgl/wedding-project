@@ -69,7 +69,6 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
         _currentFileIndex = 0;
       });
 
-      // 💡 Flutter Yeni Yükleme Mantığı Örneği:
       try {
         final url = Uri.parse(
           'https://us-central1-wedding-1c8cc.cloudfunctions.net/shareAnilar',
@@ -80,19 +79,35 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
             _currentFileIndex++;
           });
 
-          // 1. Aşama: Sunucudan yükleme izni (Signed URL) istiyoruz
-          final responseToken = await http.post(
-            url,
-            headers: {"Content-Type": "application/json"},
-            body: jsonEncode({
-              "filename": file.name,
-              "mimeType": file.type,
-              "uploaderName": staticUploaderName,
-            }),
-          );
+          // 1. AŞAMA: Sunucudan yükleme izni (Signed URL) talep ediyoruz
+          final responseToken = await http
+              .post(
+                url,
+                headers: {
+                  "Content-Type": "application/json",
+                  "Accept": "application/json",
+                },
+                body: jsonEncode({
+                  "filename": file.name,
+                  "mimeType": file.type,
+                  "uploaderName": staticUploaderName.isEmpty
+                      ? "Anonim"
+                      : staticUploaderName,
+                }),
+              )
+              .timeout(const Duration(seconds: 30));
 
-          if (responseToken.statusCode != 200) throw "Yükleme izni alınamadı.";
-          final responseData = jsonDecode(responseToken.body);
+          if (responseToken.statusCode != 200) {
+            throw "Sunucu izin vermedi (Hata Kodu: ${responseToken.statusCode}). Lütfen backend deployunun yapıldığından emin olun.";
+          }
+
+          final responseData =
+              jsonDecode(responseToken.body) as Map<String, dynamic>;
+
+          if (!responseData.containsKey('uploadUrl')) {
+            throw "Sunucu geçerli bir yükleme linki üretmedi.";
+          }
+
           final String uploadUrl = responseData['uploadUrl'];
 
           // Dosya verisini okuyoruz
@@ -101,28 +116,39 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
           await reader.onLoadEnd.first;
           final List<int> bytes = reader.result as List<int>;
 
-          // 2. Aşama: Cloud Functions'ı aradan çıkarıp doğrudan Firebase Storage'a PUT atıyoruz
-          final storageResponse = await http.put(
-            Uri.parse(uploadUrl),
-            headers: {
-              "Content-Type": file.type,
-              "x-goog-meta-uploader": staticUploaderName.isEmpty
-                  ? "Anonim"
-                  : staticUploaderName,
-            },
-            body: bytes,
-          );
+          // 2. AŞAMA: Doğrudan Firebase Storage'a yükleme yapıyoruz (15 dakika limitli)
+          final storageResponse = await http
+              .put(
+                Uri.parse(uploadUrl),
+                headers: {
+                  "Content-Type": file.type,
+                  "x-goog-meta-uploader": staticUploaderName.isEmpty
+                      ? "Anonim"
+                      : staticUploaderName,
+                },
+                body: bytes,
+              )
+              .timeout(const Duration(minutes: 15));
 
           if (storageResponse.statusCode != 200 &&
               storageResponse.statusCode != 201) {
-            throw "Dosya yüklenemedi: ${storageResponse.statusCode}";
+            throw "Bulut havuzuna yükleme başarısız oldu: ${storageResponse.statusCode}";
           }
         }
 
         setState(() {
           _isUploading = false;
         });
-        // Başarı SnackBar gösterimi...
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text("Tüm anılarınız başarıyla yüklendi. 🤍"),
+              backgroundColor: vizonAltin,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
       } catch (err) {
         setState(() {
           _isUploading = false;
@@ -145,7 +171,6 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
     return Scaffold(
       body: Stack(
         children: [
-          // Ahşap Salon Arka Planı
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
