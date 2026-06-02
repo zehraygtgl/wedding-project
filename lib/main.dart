@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 import 'dart:html' as html;
 import 'package:http/http.dart' as http;
-import 'package:google_fonts/google_fonts.dart'; // Font garantisi için paketimiz
+import 'package:google_fonts/google_fonts.dart';
 
 void main() {
   runApp(const MyApp());
@@ -37,16 +37,28 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
   int _totalFiles = 0;
   int _currentFileIndex = 0;
 
+  final TextEditingController _nameController = TextEditingController();
+
   final Color kartBeyazi = const Color(0xFFFDFDFD);
   final Color vizonAltin = const Color(0xFFB59975);
-  final Color koyuYazi = const Color(0xFF2C2C2C);
-  final Color softYazi = const Color(0xFF666666);
+  final Color koyuYazi = const Color(0xFF1A1A1A);
+  final Color softYazi = const Color(0xFF555555);
+
+  @override
+  void dispose() {
+    _nameController.dispose();
+    super.dispose();
+  }
 
   void _startNativeWebUpload() {
     final html.FileUploadInputElement uploadInput =
         html.FileUploadInputElement();
     uploadInput.multiple = true;
     uploadInput.accept = 'image/*,video/*';
+
+    // 💡 ÇÖZÜM: Döngü başlamadan önce girilen ismi yerel bir değişkene sabitliyoruz.
+    // Böylece 'null is not a subtype of TextEditingController' hatası KESİNLİKLE engelleniyor.
+    final String staticUploaderName = _nameController.text;
 
     uploadInput.click();
 
@@ -87,6 +99,9 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
           request.files.add(multipartFile);
           request.fields['filename'] = file.name;
           request.fields['mimeType'] = file.type;
+
+          // Sabitlediğimiz ismi güvenli bir şekilde gönderiyoruz
+          request.fields['uploaderName'] = staticUploaderName;
 
           final streamedResponse = await request.send();
           final response = await http.Response.fromStream(streamedResponse);
@@ -131,30 +146,27 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
     return Scaffold(
       body: Stack(
         children: [
-          // 💡 LOKAL ARKA PLAN: Artık internet hızı ya da engeller yüzünden asla patlamaz!
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/arka_plan.jpg'),
+                image: AssetImage('assets/images/dugun.jpeg'),
                 fit: BoxFit.cover,
               ),
             ),
           ),
-          Container(
-            color: Colors.black.withOpacity(0.3), // Premium sinematik gölgeleme
-          ),
+          Container(color: Colors.black.withOpacity(0.28)),
 
           Center(
             child: Padding(
               padding: const EdgeInsets.all(16.0),
               child: Container(
-                constraints: const BoxConstraints(maxWidth: 390),
+                constraints: const BoxConstraints(maxWidth: 395),
                 decoration: BoxDecoration(
                   color: kartBeyazi.withOpacity(0.96),
                   borderRadius: BorderRadius.circular(32),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(0.18),
+                      color: Colors.black.withOpacity(0.15),
                       blurRadius: 25,
                       offset: const Offset(0, 10),
                     ),
@@ -167,77 +179,95 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                 child: Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    // İsimler (Premium Davetiye Yazı Tipi)
                     Text(
                       "Hilal & Oğuz",
-                      style: GoogleFonts.cinzel(
-                        fontSize: 32,
-                        fontWeight: FontWeight.w600,
+                      style: GoogleFonts.pinyonScript(
+                        fontSize:
+                            52, // Kabalığı önlemek için yazı boyutunu ve rengini optimize ettik
                         color: koyuYazi,
-                        letterSpacing: 0.5,
                       ),
                       textAlign: TextAlign.center,
                     ),
-                    const SizedBox(height: 4),
+                    const SizedBox(height: 2),
                     Text(
                       "2026",
-                      style: GoogleFonts.montserrat(
-                        fontSize: 12,
+                      style: GoogleFonts.inter(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w500,
                         color: softYazi,
-                        letterSpacing: 3,
+                        letterSpacing: 4,
                       ),
                     ),
-                    const SizedBox(height: 32),
+                    const SizedBox(height: 28),
 
-                    // Eğik Şiirsel Söz (Asil serif el yazısı modu)
                     Text(
                       "\"Anılar, kalbin\nen güzel hazinesidir.\"",
-                      style: GoogleFonts.playfairDisplay(
-                        fontSize: 20,
+                      style: GoogleFonts.lora(
+                        fontSize: 18,
                         fontStyle: FontStyle.italic,
-                        color: koyuYazi,
-                        height: 1.4,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 14),
-
-                    // Alt Açıklama
-                    Text(
-                      "Fotoğraf ve videolarınızı bizimle paylaşır mısınız?",
-                      style: GoogleFonts.montserrat(
-                        fontSize: 12,
-                        color: softYazi,
                         fontWeight: FontWeight.w400,
-                        letterSpacing: 0.1,
+                        color: koyuYazi,
+                        height: 1.5,
                       ),
                       textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 36),
-
-                    // Sabit Metin Alanı
-                    Container(
-                      width: double.infinity,
-                      padding: const EdgeInsets.symmetric(vertical: 15),
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.circular(25),
-                        border: Border.all(color: Colors.black12, width: 0.8),
-                      ),
-                      child: Text(
-                        "ADINIZ (İSTEĞE BAĞLI)",
-                        textAlign: TextAlign.center,
-                        style: GoogleFonts.montserrat(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
-                          color: softYazi.withOpacity(0.6),
-                          letterSpacing: 1.5,
-                        ),
-                      ),
                     ),
                     const SizedBox(height: 16),
 
-                    // Canlı Sayaç ve Yükleme Buton Kontrolü
+                    Text(
+                      "Fotoğraf ve videolarınızı bizimle paylaşır mısınız?",
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        color: softYazi,
+                        fontWeight: FontWeight.w400,
+                        letterSpacing: 0.3,
+                      ),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 32),
+
+                    TextField(
+                      controller: _nameController,
+                      textAlign: TextAlign.center,
+                      style: GoogleFonts.inter(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                        color: koyuYazi,
+                      ),
+                      decoration: InputDecoration(
+                        hintText: "ADINIZ (İSTEĞE BAĞLI)",
+                        hintStyle: GoogleFonts.inter(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w600,
+                          color: softYazi.withOpacity(0.5),
+                          letterSpacing: 2,
+                        ),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 16,
+                        ),
+                        filled: true,
+                        fillColor: Colors.white,
+                        border: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(25),
+                          borderSide: const BorderSide(
+                            color: Colors.black12,
+                            width: 0.8,
+                          ),
+                        ),
+                        enabledBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(25),
+                          borderSide: const BorderSide(
+                            color: Colors.black12,
+                            width: 0.8,
+                          ),
+                        ),
+                        focusedBorder: OutlineInputBorder(
+                          borderRadius: BorderRadius.circular(25),
+                          borderSide: BorderSide(color: vizonAltin, width: 1.2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 18),
+
                     if (_isUploading) ...[
                       Column(
                         children: [
@@ -256,7 +286,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                           const SizedBox(height: 14),
                           Text(
                             "Anılarınız aktarılıyor... ✨",
-                            style: GoogleFonts.montserrat(
+                            style: GoogleFonts.inter(
                               color: vizonAltin,
                               fontWeight: FontWeight.bold,
                               fontSize: 13,
@@ -264,7 +294,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                           ),
                           Text(
                             "$_currentFileIndex / $_totalFiles dosya yüklendi",
-                            style: GoogleFonts.montserrat(
+                            style: GoogleFonts.inter(
                               color: koyuYazi.withOpacity(0.6),
                               fontSize: 11,
                             ),
@@ -272,7 +302,6 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                         ],
                       ),
                     ] else ...[
-                      // Muhteşem Modern Buton
                       SizedBox(
                         width: double.infinity,
                         child: ElevatedButton(
@@ -288,10 +317,10 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                           ),
                           child: Text(
                             "ANILARI PAYLAŞ",
-                            style: GoogleFonts.montserrat(
-                              fontSize: 13,
+                            style: GoogleFonts.inter(
+                              fontSize: 12.5,
                               fontWeight: FontWeight.bold,
-                              letterSpacing: 2,
+                              letterSpacing: 2.5,
                             ),
                           ),
                         ),
@@ -299,11 +328,10 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
                     ],
                     const SizedBox(height: 24),
 
-                    // Dipnot
                     Text(
                       "* Birden fazla seçim yapabilirsiniz.",
-                      style: GoogleFonts.playfairDisplay(
-                        fontSize: 11,
+                      style: GoogleFonts.lora(
+                        fontSize: 10.5,
                         fontStyle: FontStyle.italic,
                         color: softYazi.withOpacity(0.7),
                       ),
