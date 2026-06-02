@@ -156,7 +156,7 @@ class _WeddingUploadPageState extends State<WeddingUploadPage> {
           Container(
             decoration: const BoxDecoration(
               image: DecorationImage(
-                image: AssetImage('assets/images/arkaplan.jpeg'),
+                image: AssetImage('assets/images/arkaplan.png'),
                 fit: BoxFit.cover,
               ),
             ),
